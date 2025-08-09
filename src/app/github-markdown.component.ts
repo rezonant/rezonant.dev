@@ -16,6 +16,12 @@ import { BehaviorSubject } from "rxjs";
     `,
     styles: [
         `
+        .markdown ::ng-deep {
+            img {
+                max-width: 100%;
+            }
+        }
+
         footer {
             display: block;
             border-top: 1px solid #ff7676;
