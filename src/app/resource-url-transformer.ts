@@ -10,18 +10,13 @@ export function resourceUrlTransformer(getPath: () => string): (url: string) => 
             url = url.replace(/\/public\/resources\//, '');
         }
 
-        console.log(`start: ${currentPath}`);
         if (url.endsWith('.md')) {
             url = url.replace(/\.md$/, '');
 
             while (url.startsWith('../')) {
                 currentPath = currentPath.split('/').slice(0, -1).join('/');
                 url = url.slice(3);
-                console.log(`PARENT: ${currentPath}`);
             }
-
-            console.log(`FINAL: ${currentPath}`);
-            console.log(` PLUS: ${url}`);
 
             if (url.startsWith('./')) {
                 url = url.slice(2);
@@ -31,7 +26,6 @@ export function resourceUrlTransformer(getPath: () => string): (url: string) => 
         }
 
         url = `/resources/${url}`.replace(/\/+/g, '/');
-        console.log(`RESULT: ${url}`);
         return url;
     };
 }

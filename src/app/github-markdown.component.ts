@@ -20,6 +20,56 @@ import { BehaviorSubject } from "rxjs";
             img {
                 max-width: 100%;
             }
+
+            pre.error {
+                border: 1px solid #ff7676;
+                padding: 1em;
+            }
+
+            code {
+                background-color: #102533;
+                padding: 0px 4px;
+                border: 1px solid #346e96;
+                border-radius: 3px;
+            }
+            blockquote {
+                font-style: italic;
+                border-left: 2px solid #55838d;
+                padding: 0 0.5em;
+                color: #55838d;
+                margin: 0;
+
+                &.discord-message {
+                    border: 1px solid #ff7676;
+                    padding: 1em;
+                    border-radius: 3px;
+                    margin: 2em;
+
+                    .byline {
+                        display: flex;
+                        gap: 0.5em;
+                        align-items: center;
+                        font-style: normal;
+                    }
+
+                    .author {
+                        font-weight: bold;
+                        font-size: 110%;
+                    }
+
+                    .discord-message-content {
+                        padding: 0.5em 0;
+                        font-size: 200%;
+                    }
+
+                    .discord-link {
+                        display: block;
+                        font-size: 80%;
+                        opacity: 0.7;
+                        text-align: right;
+                    }
+                }
+            }
         }
 
         footer {

@@ -7,7 +7,7 @@
 
 # Communities
 
-- [Unreal Source](https://unrealsource.com/) - The Unreal Source discord is the place to be for all things Unreal
+- [Unreal Source](./unrealsource.md) - The Unreal Source discord is the place to be for all things Unreal
 
 # Blogs and Notes
 

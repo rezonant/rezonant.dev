@@ -11,7 +11,7 @@ $accent-color: #ff7676;
     margin: 2.5em auto;
     width: $site-width;
     max-width: 100%;
-    padding: 2em 3em;
+    padding: 4em 6em;
     background-color: $main-background;
     --main-background: #{$main-background};
     --main-background-o50: #{color.change($main-background, $alpha: 0.01)};
@@ -34,7 +34,7 @@ header {
     position: relative;
     z-index: 1;
     transition: 500ms top ease-in-out;
-
+    margin-bottom: 2em;
     border-bottom: 1px solid $accent-color;
 
     @media (max-width: $small-nav-width) {
