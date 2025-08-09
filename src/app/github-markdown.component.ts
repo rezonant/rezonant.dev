@@ -1,20 +1,33 @@
-import { Component, Input } from "@angular/core";
+import { Component, Input, Output } from "@angular/core";
+import { environment } from "./environment";
+import { BehaviorSubject } from "rxjs";
 
 @Component({
     selector: `rez-github-markdown`,
     template: `
         @if (readme) {
-            <div class="markdown" [innerHTML]="readme | markdownToHtml | trustHtml"></div>
+            <div class="markdown" [innerHTML]="readme | markdownToHtml: { urlTransformer: urlTransformer } | trustHtml"></div>
             @if (showGithubLink) {
                 <footer>
-                    <a [href]="githubUrl">View on Github</a>
+                    <a [href]="githubUrl">View source on Github</a>
                 </footer>
             }
         }
     `,
     styles: [
         `
-        footer { text-align: center;}
+        footer {
+            display: block;
+            border-top: 1px solid #ff7676;
+            padding-top: 1em;
+            margin-top: 2em;
+            text-align: center;
+
+            a {
+                opacity: 0.7;
+                font-size: 80%;
+            }
+        }
         `
     ]
 })
@@ -26,6 +39,19 @@ export class GithubMarkdownComponent {
     private _branch = 'main';
 
     @Input() showGithubLink = true;
+    @Input() urlTransformer?: (url: string) => string;
+
+    /**
+     * If true, *this* is the repository being queried. In that case, the markdown is fetched from the local
+     * web server
+     */
+    @Input() self = false;
+    @Input() selfPrefix = '/public';
+
+    @Input() consumeTitle = false;
+
+    private _titleChange = new BehaviorSubject<string | undefined>(undefined);
+    @Output() titleChange = this._titleChange.asObservable();
 
     @Input({ required: true }) get path() {
         return this._path;
@@ -57,6 +83,14 @@ export class GithubMarkdownComponent {
     }
 
     get url() {
+        if (this.self && environment.name === 'development') {
+            let path = '/' + this.path.replace(/^\/*/, '');
+            if (path.startsWith(this.selfPrefix)) {
+                path = path.slice(this.selfPrefix.length);
+            }
+            return `${environment.baseUrl}/${path}`;
+        }
+
         return `https://raw.githubusercontent.com/${this.project}/${this.branch}/${this.path}`;
     }
 
@@ -71,16 +105,18 @@ export class GithubMarkdownComponent {
         let response = await fetch(this.url);
         let readme = await response.text();
 
-        for (let [from, to] of this.replacements) {
-            console.log(`FROM: '${from}'`);
-            console.log(`  TO: '${to}'`);
-
-            readme = readme.replace(new RegExp(from, 'gms'), to);
+        if (this.consumeTitle) {
+            let titleRegex = /^# (.*)$/m;
+            let titleMatch = readme.match(titleRegex);
+            if (titleMatch) {
+                this._titleChange.next(titleMatch[1]);
+                readme = readme.replace(titleRegex, '');
+            }
         }
 
-        //console.log(readme);
-
-        (window as any).readme = readme;
+        for (let [from, to] of this.replacements) {
+            readme = readme.replace(new RegExp(from, 'gms'), to);
+        }
 
         this.readme = readme;
     }

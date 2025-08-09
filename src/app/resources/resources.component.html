@@ -1,0 +1,10 @@
+<h1>{{ title }}</h1>
+<rez-github-markdown
+    project="rezonant/rezonant.dev"
+    path="public/resources/index.md"
+    [self]="true"
+    selfPrefix="/public/"
+    [urlTransformer]="urlTransformer"
+    [consumeTitle]="true"
+    (titleChange)="setTitle($event ?? '')"
+    />

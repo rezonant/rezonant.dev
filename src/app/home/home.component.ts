@@ -3,14 +3,14 @@ import { Component, ElementRef, inject, PLATFORM_ID, ViewChild } from '@angular/
 import { DoodleContext, DoodleUtilities, orbitals, rain, DoodleFactory, scribble, sine, snow, starfield, tendrils, DoodleRenderer, transition } from '../doodles';
 
 const DOODLES = [
-    starfield, 
-    rain, 
-    snow, 
+    starfield,
+    rain,
+    snow,
     orbitals
 ];
 
 @Component({
-    selector: 'app-home',
+    selector: 'rez-home',
     templateUrl: './home.component.html',
     styleUrl: './home.component.scss'
 })
@@ -22,7 +22,7 @@ export class HomeComponent {
         if (isPlatformServer(this.platform))
             return;
 
-        
+
         this.doodlePlayer = new DoodlePlayer(this.canvas.nativeElement);
         this.pickDoodle();
         this.doodlePlayer.start();
@@ -37,10 +37,10 @@ export class HomeComponent {
     private doodleIndex = 0;
 
     private chosenDoodleFactory!: DoodleFactory;
-    
+
     private pickDoodle() {
         let doodle: DoodleFactory;
-        
+
         doodle = DOODLES[Math.random() * DOODLES.length | 0];
         //doodle = DOODLES[this.doodleIndex++ % DOODLES.length];
 
@@ -103,15 +103,15 @@ export class DoodlePlayer {
             let newTime = Date.now();
             let deltaTime = (newTime - lastTime) / 1000;
             lastTime = newTime;
-    
+
             // Ensure canvas size is correct
             this.updateCanvasSize();
-    
+
             // Render
             this.renderer?.(deltaTime);
         };
 
         loop();
     }
-    
+
 }
