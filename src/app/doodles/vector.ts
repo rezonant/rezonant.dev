@@ -40,20 +40,24 @@ export class Color {
     ){
     }
 
+    static get black() { return new Color(0,0,0,1); }
+    static get white() { return new Color(1,1,1,1); }
+    static get transparent() { return new Color(0,0,0,0); }
+
     get redByte() { return clamp(this.red) * 255 | 0; }
     get greenByte() { return clamp(this.green) * 255 | 0; }
     get blueByte() { return clamp(this.blue) * 255 | 0; }
     get alphaByte() { return clamp(this.alpha) * 255 | 0; }
 
     toHex() {
-        return `#` 
+        return `#`
             + `${zeroPad(this.redByte.toString(16))}`
             + `${zeroPad(this.greenByte.toString(16))}`
             + `${zeroPad(this.blueByte.toString(16))}`
             + `${zeroPad(this.alphaByte.toString(16))}`
         ;
     }
-    
+
     drawBackground(context: CanvasRenderingContext2D) {
         let savedFill = context.fillStyle;
         context.fillStyle = this.toHex();
@@ -67,17 +71,17 @@ export class Color {
         } else if (str.startsWith('rgb(')) {
             let parts = str.replace(/^rgb\(/, '').replace(/\)$/, '').split(',');
             return new Color(
-                Number(parts[0].trim()) / 255, 
-                Number(parts[1].trim()) / 255, 
-                Number(parts[2].trim()) / 255, 
+                Number(parts[0].trim()) / 255,
+                Number(parts[1].trim()) / 255,
+                Number(parts[2].trim()) / 255,
                 1.0
             );
         } else if (str.startsWith('rgba')) {
             let parts = str.replace(/^rgba\(/, '').replace(/\)$/, '').split(',');
             return new Color(
-                Number(parts[0].trim()) / 255, 
-                Number(parts[1].trim()) / 255, 
-                Number(parts[2].trim()) / 255, 
+                Number(parts[0].trim()) / 255,
+                Number(parts[1].trim()) / 255,
+                Number(parts[2].trim()) / 255,
                 Number(parts[3].trim()) / 255
             );
         } else {
@@ -94,9 +98,9 @@ export class Color {
             throw new Error(`Invalid hex code: ${hex}`);
 
         return new Color(
-            Number.parseInt(match[1], 16) / 255.0, 
-            Number.parseInt(match[2], 16) / 255.0, 
-            Number.parseInt(match[3], 16) / 255.0, 
+            Number.parseInt(match[1], 16) / 255.0,
+            Number.parseInt(match[2], 16) / 255.0,
+            Number.parseInt(match[3], 16) / 255.0,
             Number.parseInt(match[4] || 'FF', 16) / 255.0
         );
     }
@@ -129,53 +133,53 @@ export class Vector {
     subtract(b: Vector): Vector {
         return new Vector(this.x - b.x, this.y - b.y);
     }
-    
+
     add(b: Vector): Vector {
         return new Vector(this.x + b.x, this.y + b.y);
     }
-    
+
     scale(s: number): Vector {
         return new Vector(this.x * s, this.y * s);
     }
-    
+
     pow(exp: number): Vector {
         return new Vector(this.x ** exp, this.y ** exp);
     }
-    
+
     distance(b: Vector): number {
         return Math.sqrt((b.x - this.x) ** 2 + (b.y - this.y) ** 2);
     }
-    
+
     get length() {
         return Math.sqrt(this.x ** 2 + this.y ** 2);
     }
-    
+
     normalize() {
         return this.scale(1 / this.length);
     }
-    
+
     rotateDeg(angle: number) {
         return this.rotate(degreesToRadians(angle));
     }
 
     rotate(angle: number) {
         return new Vector(
-            Math.cos(angle) * this.x - Math.sin(angle) * this.y, 
+            Math.cos(angle) * this.x - Math.sin(angle) * this.y,
             Math.sin(angle) * this.x + Math.cos(angle) * this.y
         );
     }
-    
+
     dot(b: Vector) {
         return this.x * b.x + this.y * b.y;
     }
-    
+
     angle(b: Vector) {
         let value = Math.atan2(b.y, b.x) - Math.atan2(this.y, this.x);
         if (value > Math.PI)
             value -= 2 * Math.PI;
         else if (value <= -Math.PI)
             value += 2 * Math.PI;
-    
+
         return value;
     }
 

@@ -3,11 +3,12 @@ import { Color } from "./vector";
 export class DoodleUtilities {
     constructor(readonly context: CanvasRenderingContext2D) {
     }
-    
+
     get canvas() { return this.context.canvas; }
 
     get backgroundColor() {
-        return Color.parse(this.canvas.computedStyleMap().get('--main-background')?.toString()!);
+        const str = this.canvas.computedStyleMap().get('--main-background')?.toString();
+        return str ? Color.parse(str) : Color.black;
     }
 
     drawBackgroundColor(opacity = 1) {
@@ -15,7 +16,7 @@ export class DoodleUtilities {
     }
 }
 
-export type DoodleContext = CanvasRenderingContext2D & { 
+export type DoodleContext = CanvasRenderingContext2D & {
     doodle: DoodleUtilities;
 };
 
