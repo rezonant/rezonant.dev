@@ -1,1 +1,36 @@
-/* You can add global styles to this file, and also import other style files */
+@use 'sass:color';
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
+
+$site-background: #08141b;
+
+* {
+    box-sizing: border-box;
+}
+
+html, body {
+    font-family: "Raleway", sans-serif;
+    background-color: $site-background;
+
+    --site-background: #{$site-background};
+    --site-background-o50: #{color.change($site-background, $alpha: 0.08)};
+    color: #7eb3bf;
+    min-height: 100%;
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    margin: 0;
+}
+
+a {
+    color: #ff7676;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+
+    &:visited {
+        color: pink;
+    }
+}
