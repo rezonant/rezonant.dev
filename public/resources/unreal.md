@@ -11,6 +11,7 @@
 
 # Blogs and Notes
 
+- [Ari's Unreal Engine Notes](https://flassari.notion.site/Ari-s-Unreal-Engine-Notes-1a75e43f4014464984d4fae0617e5cef)
 - [Fishy's Game Dev Notes](https://notes.hzfishy.fr/)
 - [Laura's (Mostly) Unreal Blog](https://landelare.github.io/)
 - [zomg's Notes](https://zomgmoz.tv/unreal/)

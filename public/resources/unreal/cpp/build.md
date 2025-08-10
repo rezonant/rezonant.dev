@@ -6,22 +6,23 @@
 
 <br/>
 
-> Resources from Epic:  
+> Resources from Epic:
 > - [UnrealBuildTool Documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-build-tool-in-unreal-engine)
 > - [Modules - Overview and Structure](https://dev.epicgames.com/community/learning/knowledge-base/GDD9/unreal-engine-modules-overview-and-structure)
-> Resources from the community:
-> - [UE4 Modules - flassari](https://www.youtube.com/watch?v=DqqQ_wiWYOw)
+> - [UE4 Modules, Ari Arnbjörnsson](https://www.youtube.com/watch?v=DqqQ_wiWYOw) (Technically Ari wasn't at Epic at the time
+>   but he is now and his talk is a very useful resource!)
 
 When you build your Unreal game from your [IDE](./ides), the IDE itself has nothing to do with how the project is built.
 The Build and Start options simply call out to Unreal's own build system, called **Unreal Build Tool**.
 
 Unreal Build Tool is part of the engine. It is a program written in C# which knows how to build not only your game,
-but also the majority of the engine itself. When you use **Visual Studio**, the SLN (solution) file that you open is 
-a specially crafted solution created by the engine to wrap Unreal Build Tool in a way that Visual Studio knows how to 
-use. Therefore, the **Solution settings** have virtually no effect on how your application is built, and should be ignored.
+but also the majority of the engine itself. When you use **Visual Studio**, the SLN that you open is a specially 
+crafted solution created by the engine to wrap Unreal Build Tool in a way that Visual Studio knows how to use. 
+Therefore, the **Solution settings** have virtually no effect on how your application is built, and should be ignored.
 For more information, see [IDEs](./ides).
 
-The rest of this document covers how UBT works, and how you can control what it does.
+The rest of this document covers how Unreal Build Tool works as a build system, and the mechanics of how it decides 
+what to do, and how Unreal modules provide an abstraction for dynamic libraries / shared objects (DLLs/SOs).
 
 # Unreal Build Tool: A 'make' for your Unreal Project
 
@@ -109,19 +110,49 @@ modules that should only be built for the editor or for the game (and in the cas
 don't have to conditionally compile references to editor-only declarations since the module will only be built when 
 building the editor).
 
-The Target also specifies global build settings such as what architectures are being built, what version of C++ should be used, whether to use UBT's Unity Build feature for more efficient compilation of large projects, how C++ includes should be ordered for compatibility with older project code, and much much more. Most of these settings can be overridden at the module level as well, and you can even programmatically receive the target configuration from within your module configuration and use it to determine how to configure your module.
+The Target also specifies global build settings such as what architectures are being built, what version of C++ should 
+be used, whether to use UBT's Unity Build feature for more efficient compilation of large projects, how C++ includes 
+should be ordered for compatibility with older project code, and much much more. Most of these settings can be 
+overridden at the module level as well, and you can even programmatically receive the target configuration from within 
+your module configuration and use it to determine how to configure your module.
 
 # Build Types (Modular / Monolithic)
 
-Unreal Build Tool can build a final executable in one of two ways: using dynamic linking (DLLs) and using static linking (library files). UBT refers to dynamic linking as a "modular" build because the final result will have the code for each module existing in its own DLL, versus a "monolithic" build which will consist only of the EXE (and a few auxiliary DLLs that are not statically compiled).
+Unreal Build Tool can build a final executable in one of two ways: using dynamic linking (DLLs) and using static 
+linking (library files). UBT refers to dynamic linking as a "modular" build because the final result will have the code 
+for each module existing in its own DLL, versus a "monolithic" build which will consist only of the EXE (and a few 
+auxiliary DLLs that are not statically compiled).
 
-You can choose which build type you want for both your Game target and your Editor target. By default Unreal uses a modular build for the Editor target and a monolithic build for the Game target.
+You can choose which build type you want for both your Game target and your Editor target. By default Unreal uses a 
+modular build for the Editor target and a monolithic build for the Game target.
 
-Modular builds reduce the link time required to produce the final executable at the expense of disk space and load-time complexity. Monolithic builds take longer to link but reduce disk space requirements, filesystem complexity, and load-time complexity. 
+Modular builds reduce the link time required to produce the final executable at the expense of disk space and load-time 
+complexity. Monolithic builds take longer to link but reduce disk space requirements, filesystem complexity, and 
+load-time complexity. 
 
 # Modules
 
-Modules are the building blocks of Unreal, both for the engine and your project. Modules are detected by UnrealBuildTool by finding a `.Build.cs` file within a folder underneath `Source`. You cannot nest modules, but you can have as many organizational folders as you want above the module's folder. Within the module's folder, all .cpp files found within will be built by Unreal Build Tool. It is convention for modules to have a `Public` folder and `Private` folder, and for the C++ source files and private headers to be placed in `Private` and the headers meant for other modules to use to be found in the `Public` folder. Unreal Build Tool does not treat these folders specially however, it only knows about them because the `.Build.cs` file specifies these folders using the `PrivateIncludePaths` and `PublicIncludePaths` options. 
+Modules are the building blocks of Unreal, both for the engine and your project. Modules are detected by 
+UnrealBuildTool by finding a `.Build.cs` file within a folder underneath `Source`. You cannot nest modules, but you can 
+have as many organizational folders as you want above the module's folder. Within the module's folder, all .cpp files 
+found within will be built by Unreal Build Tool. It is convention for modules to have a `Public` folder and `Private` 
+folder, and for the C++ source files and private headers to be placed in `Private` and the headers meant for other 
+modules to use to be found in the `Public` folder, but this is not required if no other modules will depend on yours. 
+You can customize the paths exposed to other modules using `PrivateIncludePaths` and `PublicIncludePaths`.
+
+# Dependencies 
+
+Modules can depend on other modules. Module dependencies can either be "public" or "private". A public dependency causes
+the public include paths of the dependency to be available to other modules that depend on your module. This is needed 
+if you use the headers of your dependency within your own public headers. Private dependencies do not have this effect.
+
+Direct dependencies (either public or private) are linked to your module. This means you can access the exported symbols
+provided by the other module. However indirect dependencies (regardless of public/private) do not expose the linked 
+symbols of the transitive dependency. In that case the module that depends on your module must also depend on your 
+module's dependencies. Note that this is only needed if you need to call or otherwise reference a symbol exported by 
+the transitive dependency.
+
+All modules must depend on the `Core` module as it provides the module manager system itself. 
 
 # Static/Dynamic Linking
 
@@ -158,14 +189,16 @@ when compiling the library itself, and `__declspec(dllimport)` when the header i
 the library. Unreal does exactly this using the `MODULENAME_API` macros that are automatically injected by Unreal 
 Build Tool.
 
-When building the C++ files of the module "Foo", UnrealBuildTool specifies a macro of `FOO_API` which resolves to `__declspec(dllexport)`. You can use this within your declarations like so:
+When building the C++ files of the module "Foo", UnrealBuildTool specifies a macro of `FOO_API` which resolves to 
+`__declspec(dllexport)`. You can use this within your declarations like so:
 
 ```c++
 // Foo/Public/MyFunction.h
 void FOO_API MyFunction(int a);
 ```
 
-When building the C++ files of modules which _depend_ on module "Foo", UBT defines `FOO_API` to be `__declspec(dllimport)`. 
+When building the C++ files of modules which _depend_ on module "Foo", UBT defines `FOO_API` to be 
+`__declspec(dllimport)`. 
 
 So the source files of the Foo module itself end up declaring:
 
@@ -216,8 +249,47 @@ Modules must declare an implementation class and register it with the module sys
 macros within one of the module's source (.cpp) files, typically the implementation file for the module class itself. 
 Failing to do this will cause the module manager to fail to initialize the module at startup. 
 
+```cpp
+IMPLEMENT_MODULE(FNameOfModuleClass, ModuleName);
+```
+
+However you do not need to create a class for this purpose, you can use the one the engine gives you if you don't need 
+any of the module class's capabilities: `FDefaultModuleImpl`
+
+```cpp
+IMPLEMENT_MODULE(FDefaultModuleImpl, ModuleName);
+```
+
+> [!NOTE]
+> The IMPLEMENT_MODULE macro is provided by the ModuleManager.h include of the Core module. This is the main reason you
+> must depend on the Core module.
+
 Module classes implement the `IModuleInterface` interface which provides the ability to run code during several 
 lifecycle events (ie load/shutdown, etc). This can be used to initialize your module if needed.
+
+# Accessing a Module's Main Class Instance
+
+The main class for a module has the same lifetime as the module itself. It isn't just for use by the module manager, 
+you can also access this class instance yourself from anywhere. 
+
+```cpp
+FModuleManager::Get().LoadModuleChecked<FModuleClassName>(TEXT("ModuleName"));
+```
+
+It is not uncommon to wrap this into a static `Get()` or `Instance()` method on the class itself for convenience:
+
+```cpp
+static IFunctionalTestingModule& Get()
+{
+    static const FName ModuleName(TEXT("ModuleName"));
+    return FModuleManager::Get().LoadModuleChecked<ModuleClassName>(ModuleName);
+}
+```
+
+The static definition for the `FName` here is not required, but is good practice to avoid repeated time looking up
+the `FName` identity at runtime. See 
+[Baffled's article](https://itsbaffled.github.io/posts/UE/GameplayTags-And-FNames-In-Depth) for more information 
+about how `FName`s work.
 
 # Game Modules
 
@@ -244,6 +316,13 @@ You can also use `IMPLEMENT_GAME_MODULE` for additional modules in place of `IMP
 hints that this creates additional DLLs whereas `IMPLEMENT_MODULE` does not, but this is not true. There appears to be 
 no functional difference between using `IMPLEMENT_GAME_MODULE` and `IMPLEMENT_MODULE`. Please ping me on Unreal Source
 if you know otherwise.
+
+There is special functionality related to game modules, but it is not controlled by the use of `IMPLEMENT_GAME_MODULE`,
+it is controlled by returning `true` from the `IModuleInterface::IsGameModule` method as implemented by your module's 
+main class. This causes some [Hot Reload](./hotreload.md) related configuration to occur, not that you should be using 
+that feature. It does also cause some other things to happen: For instance on the scene outliner within the Unreal level
+editor, C++ actor classes which reside in game modules will have a hyperlink shown allowing the user to jump to that 
+actor's definition.
 
 > [!NOTE]
 > The special built-in UnrealGame target (and corresponding empty module) is used for content-only projects (also 

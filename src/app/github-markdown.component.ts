@@ -30,9 +30,17 @@ import { BehaviorSubject } from "rxjs";
                 padding: 1em;
             }
 
-            code {
+            code:not(pre code) {
                 background-color: #102533;
                 padding: 0px 4px;
+                border: 1px solid #346e96;
+                border-radius: 3px;
+            }
+
+            pre code {
+                display: block;
+                background-color: #102533;
+                padding: 0.75em;
                 border: 1px solid #346e96;
                 border-radius: 3px;
             }
