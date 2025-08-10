@@ -1,11 +1,16 @@
 # Unreal C++ Build Tooling
 
-> [!NOTE] 
-> This article is a work in progress
+> [!WARNING] 
+> This article is a work in progress. Please ping me on Unreal Source (@rezonant) if you have feedback or find 
+> inaccuracies!
+
+<br/>
 
 > Resources from Epic:  
 > - [UnrealBuildTool Documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-build-tool-in-unreal-engine)
 > - [Modules - Overview and Structure](https://dev.epicgames.com/community/learning/knowledge-base/GDD9/unreal-engine-modules-overview-and-structure)
+> Resources from the community:
+> - [UE4 Modules - flassari](https://www.youtube.com/watch?v=DqqQ_wiWYOw)
 
 When you build your Unreal game from your [IDE](./ides), the IDE itself has nothing to do with how the project is built.
 The Build and Start options simply call out to Unreal's own build system, called **Unreal Build Tool**.
@@ -46,18 +51,20 @@ boundary and provide a mechanism for encapsulating implementation details and co
 
 # The Source folder
 
-Unreal Build Tool looks for C++ source files as well as Target and Module definitions within the Source folder of a given 
-project. Target definitions are located at the top level (just inside Source) and Modules are located in their own subfolders.
-You can have as many or as few organizational folders above an Unreal module as you need.
+Unreal Build Tool looks for C++ source files as well as Target and Module definitions within the Source folder of a 
+given project. Target definitions are located at the top level (just inside Source) and Modules are located in their 
+own subfolders. You can have as many or as few organizational folders above an Unreal module as you need.
 
 # Targets
 
-A Target is recognized by existence of a file ending in ".Target.cs" being present within the Source folder. Typically a
-game project has two targets, a Game target and an Editor target. A game with the name of "ActionRPG" for instance would 
-have 
+A Target is recognized by existence of a file ending in ".Target.cs" being present within the Source folder. Typically 
+a game project has two targets, a Game target and an Editor target. A game with the name of "ActionRPG" for instance would have:
 
 - `ActionRPG.Target.cs` -- this is the Game target
 - `ActionRPGEditor.Target.cs` -- this is the Editor target.
+
+A game project can have multiple game and editor targets, which may be useful for creating specific builds that have 
+different modules included, different build configurations, etc. This is rare in most simple projects.
 
 A Target can be one of the following types:
 
@@ -137,7 +144,7 @@ DLL is 2<sup>16</sup> or 65,536 symbols.
 For smaller libraries this is not a problem, but since the resource is technically limited and there is of course 
 value in allowing the library author to avoid a symbol being created for a specific function/variable, Microsoft 
 Visual C++ only exports symbols for functions you specifically request to be exported via the 
-[`__declspec(dllexport)`](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170) modifier, 
+[`__declspec(dllexport)` modifier](https://learn.microsoft.com/en-us/cpp/cpp/dllexport-dllimport?view=msvc-170), 
 which must be placed on the function or class declaration. When placed on a class declaration, all function symbols 
 within the class are exported automatically for convenience. All non-adorned functions/variables default to "internal" 
 linkage, in which case a symbol is not created in the symbol table for that address.
@@ -187,20 +194,59 @@ different dependent function is *not* exported. This leads to a lot of frustrati
 with, and tooling for, Unreal. 
 
 The `Engine` module of the engine _is_ quite large- rumor has it that Epic has struggled with the symbol table for 
-this module in the past. The size of this module is an artifact of a time before the engine had grown _quite so_ large 
-as it is now (remember that every function, constructor, destructor etc must have a symbol). 
+this module in the past. The size of this module is an artifact of a time before the engine had grown _quite so_ 
+large as it is now (remember that every function, constructor, destructor etc must have a symbol). 
 
 In Unreal 5.6.0 for example, the editor build of the Engine module (`UnrealEditor-Engine.dll`) exports 37,961 symbols,
-and that's _after_ Epic stopped exporting a lot of symbols that developers didn't "need", so you can see how exporting 
-every single symbol could actually exceed the 65k limit.
+and that's _after_ Epic stopped exporting a lot of symbols that developers didn't "need", so you can see how 
+exporting every single symbol could actually exceed the 65k limit.
 
 You might suggest that Epic would use exports as a way to control access to specific functionality, but thats what 
 `public/protected/private/friend` visibility modifiers are for, and exports do not affect monolithic builds at all -- 
-all variables/functions are available to all compilation units, since the symbol table is not used to resolve these at 
-all during static linking. Not exporting a symbol doesn't mean you should not use it, it means not enough people want to use it for Epic to justify paying the cost. 
+all variables/functions are available to all compilation units, since the symbol table is not used to resolve these 
+at all during static linking. Not exporting a symbol doesn't mean you should not use it, it means not enough people 
+want to use it for Epic to justify paying the cost. 
 
-Note that most engine modules are _significantly_ smaller than this, the module with the next largest symbol table is `UnrealEd` with 8,968 symbols.
+Note that most engine modules are _significantly_ smaller than this, the module with the next largest symbol table is
+ `UnrealEd` with 8,968 symbols.
 
-# Primary Game Modules
+# The Module Class & Lifecycle Events
 
-Every game project with a Source folder has at least one module which is known as the Primary Game Module. This module will be the "launch module" for the target unless otherwise specified. 
+Modules must declare an implementation class and register it with the module system using one of the `IMPLEMENT_MODULE`
+macros within one of the module's source (.cpp) files, typically the implementation file for the module class itself. 
+Failing to do this will cause the module manager to fail to initialize the module at startup. 
+
+Module classes implement the `IModuleInterface` interface which provides the ability to run code during several 
+lifecycle events (ie load/shutdown, etc). This can be used to initialize your module if needed.
+
+# Game Modules
+
+> [Epic's docs](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-modules-in-unreal-engine)
+
+Every game project has at least one module which is known as the Primary Game Module. This module
+will be the "launch module" for the target unless otherwise specified. You must have at least one of these.
+
+```cpp
+IMPLEMENT_PRIMARY_GAME_MODULE(FNameOfModuleClass, ModuleName, "ProjectName");
+```
+
+In the above statement, `FNameOfModuleClass` would be the module class (for responding to load/unload events and other 
+lifecycle operations), `ModuleName` is the name of the module as specified by the UBT `ModuleName.build.cs` 
+module configuration, and `"ProjectName"` can be whatever you feel like, but conventionally should be the name of the 
+uproject, without the `.uproject` suffix. This last parameter is unused.
+
+> [!NOTE]
+> This parameter previously determined the result returned by `FApp::GetProjectName()`, but UBT now injects the 
+> preprocessor directive `UE_PROJECT_NAME`. For content-only projects and invocations of the editor the name of 
+> the `.uproject` is parsed from the command line instead (see `LaunchEngineLoop.cpp`, `LaunchSetGameName()`).
+
+You can also use `IMPLEMENT_GAME_MODULE` for additional modules in place of `IMPLEMENT_MODULE`. Epic's documentation 
+hints that this creates additional DLLs whereas `IMPLEMENT_MODULE` does not, but this is not true. There appears to be 
+no functional difference between using `IMPLEMENT_GAME_MODULE` and `IMPLEMENT_MODULE`. Please ping me on Unreal Source
+if you know otherwise.
+
+> [!NOTE]
+> The special built-in UnrealGame target (and corresponding empty module) is used for content-only projects (also 
+> known as Blueprint projects) which do not have their own C++ primary game module. This is needed for example when 
+> building monolithic executables and plugins are used (as they need to be compiled in).
+
