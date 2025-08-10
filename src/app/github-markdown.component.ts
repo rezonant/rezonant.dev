@@ -21,6 +21,10 @@ import { BehaviorSubject } from "rxjs";
                 max-width: 100%;
             }
 
+            hr {
+                border-color: #ff7676;
+            }
+
             pre.error {
                 border: 1px solid #ff7676;
                 padding: 1em;
@@ -32,12 +36,58 @@ import { BehaviorSubject } from "rxjs";
                 border: 1px solid #346e96;
                 border-radius: 3px;
             }
+
+            .markdown-alert {
+                --alert-color: #ff7676;
+                border-radius: 5px;
+                border: 1px solid var(--alert-color);
+                padding: 1.5em 1.5em 0.5em 1.5em;
+                margin: 0.5em 0;
+                color: #cae8ef;
+                padding-left: 4em;
+
+                &.markdown-alert-note { --alert-color: #6d946d; }
+                &.markdown-alert-tip { --alert-color: #3fb1ff; }
+                &.markdown-alert-important { --alert-color: #bb7a03; }
+                &.markdown-alert-warning { --alert-color: yellow; }
+                &.markdown-alert-caution { --alert-color: red; }
+
+                p.markdown-alert-title {
+                    color: var(--alert-color);
+                    margin: 0;
+                    margin-left: -2em;
+                    display: flex;
+                    gap: 1em;
+                    align-items: center;
+                    padding-bottom: 0.5em;
+                    font-weight: bold;
+                    font-size: 120%;
+
+                    svg {
+                        fill: currentColor;
+                    }
+                }
+
+                p.markdown-alert-title + p {
+                    margin-top: 0;
+                }
+            }
+
             blockquote {
-                font-style: italic;
                 border-left: 2px solid #55838d;
-                padding: 0 0.5em;
+                padding: 1em;
                 color: #55838d;
                 margin: 0;
+                background-color: #0e2433;
+
+                & > p {
+                    margin: 0;
+                    padding: 0;
+                }
+
+                & > ul {
+                    margin: 0;
+                }
 
                 &.discord-message {
                     border: 1px solid #ff7676;
@@ -60,6 +110,7 @@ import { BehaviorSubject } from "rxjs";
                     .discord-message-content {
                         padding: 0.5em 0;
                         font-size: 200%;
+                        font-style: italic;
                     }
 
                     .discord-link {

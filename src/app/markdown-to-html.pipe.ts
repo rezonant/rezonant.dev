@@ -2,6 +2,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 import * as marked from 'marked';
 import hljs from 'highlight.js';
 import { markedHighlight } from 'marked-highlight';
+import markedAlert from 'marked-alert';
 import { wrapMethod } from './utils';
 import * as yaml from 'yaml';
 
@@ -105,7 +106,8 @@ export class MarkdownToHtmlPipe implements PipeTransform {
           const language = hljs.getLanguage(lang) ? lang : 'plaintext';
           return hljs.highlight(code, { language }).value;
         }
-      })
+      }),
+      markedAlert()
     );
 
     return markdown.parse(value, { renderer: renderer }) as string;
