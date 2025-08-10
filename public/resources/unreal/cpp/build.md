@@ -1,9 +1,5 @@
 # Unreal C++ Build Tooling
 
-> [!WARNING] 
-> This article is a work in progress. Please ping me on Unreal Source (@rezonant) if you have feedback or find 
-> inaccuracies!
-
 <br/>
 
 > Resources from Epic:
@@ -118,17 +114,16 @@ your module configuration and use it to determine how to configure your module.
 
 # Build Types (Modular / Monolithic)
 
-Unreal Build Tool can build a final executable in one of two ways: using dynamic linking (DLLs) and using static 
-linking (library files). UBT refers to dynamic linking as a "modular" build because the final result will have the code 
-for each module existing in its own DLL, versus a "monolithic" build which will consist only of the EXE (and a few 
-auxiliary DLLs that are not statically compiled).
+Unreal Build Tool can build a final executable in one of two modes: 
 
-You can choose which build type you want for both your Game target and your Editor target. By default Unreal uses a 
-modular build for the Editor target and a monolithic build for the Game target.
+- **Modular builds**: Using dynamic linking (DLLs). UBT refers to dynamic linking as a "modular" build because the 
+  final result will have the code for each module existing in its own DLL. This is the default for Editor targets.
+- **Monolithic builds**: Using static linking (library files). The final build will consist of a single EXE which contains
+  all the modules of your game. This is the default for Game targets.
 
 Modular builds reduce the link time required to produce the final executable at the expense of disk space and load-time 
 complexity. Monolithic builds take longer to link but reduce disk space requirements, filesystem complexity, and 
-load-time complexity. 
+load-time complexity.
 
 # Modules
 
