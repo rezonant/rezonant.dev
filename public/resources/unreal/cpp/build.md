@@ -256,7 +256,7 @@ IMPLEMENT_MODULE(FDefaultModuleImpl, ModuleName);
 ```
 
 > [!NOTE]
-> The IMPLEMENT_MODULE macro is provided by the ModuleManager.h include of the Core module. This is the main reason you
+> The `IMPLEMENT_MODULE` macro is provided by the ModuleManager.h include of the Core module. This is the main reason you
 > must depend on the Core module.
 
 Module classes implement the `IModuleInterface` interface which provides the ability to run code during several 
@@ -320,7 +320,7 @@ editor, C++ actor classes which reside in game modules will have a hyperlink sho
 actor's definition.
 
 > [!NOTE]
-> The special built-in UnrealGame target (and corresponding empty module) is used for content-only projects (also 
-> known as Blueprint projects) which do not have their own C++ primary game module. This is needed for example when 
-> building monolithic executables and plugins are used (as they need to be compiled in).
+> The special built-in target called `UnrealGame` (and its corresponding empty module) is used for content-only projects 
+> (also known as Blueprint projects) which do not have their own C++ primary game module. This is needed for example 
+> during monolithic builds when plugins are in use (as they need to be compiled in).
 
