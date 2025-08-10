@@ -8,14 +8,14 @@
 > - [UE4 Modules, Ari Arnbjörnsson](https://www.youtube.com/watch?v=DqqQ_wiWYOw) (Technically Ari wasn't at Epic at the time
 >   but he is now and his talk is a very useful resource!)
 
-When you build your Unreal game from your [IDE](./ides), the IDE itself has nothing to do with how the project is built.
+When you build your Unreal game from your [IDE](./ides.md), the IDE itself has nothing to do with how the project is built.
 The Build and Start options simply call out to Unreal's own build system, called **Unreal Build Tool**.
 
 Unreal Build Tool is part of the engine. It is a program written in C# which knows how to build not only your game,
 but also the majority of the engine itself. When you use **Visual Studio**, the SLN that you open is a specially 
 crafted solution created by the engine to wrap Unreal Build Tool in a way that Visual Studio knows how to use. 
 Therefore, the **Solution settings** have virtually no effect on how your application is built, and should be ignored.
-For more information, see [IDEs](./ides).
+For more information, see [IDEs](./ides.md).
 
 The rest of this document covers how Unreal Build Tool works as a build system, and the mechanics of how it decides 
 what to do, and how Unreal modules provide an abstraction for dynamic libraries / shared objects (DLLs/SOs).
@@ -148,6 +148,37 @@ module's dependencies. Note that this is only needed if you need to call or othe
 the transitive dependency.
 
 All modules must depend on the `Core` module as it provides the module manager system itself. 
+
+# Compilation
+
+Unreal itself does not ship a C++ compiler. It supports several compilers.
+
+# MSVC (Windows)
+
+On Windows it uses Microsoft Visual C++ by default.
+
+You typically get the Microsoft Visual C++ (MSVC) Build Tools using the Visual Studio Installer, but they are technically
+distinct from Visual Studio. The Build Tools provides the C++ compiler that Unreal uses to build your project. 
+
+You can have multiple versions of the MSVC Build Tools installed at the same time. Unreal has a preferred build 
+tools version and it will use it __if it is installed__, otherwise it will try to pick something close. See the 
+Unreal Release Notes for the specific engine version you are using (search MSVC or Build Tools), or check the 
+`Engine\Config\Windows\Windows_SDK.json` file within your engine (this file is visible within your IDE as well). 
+
+The newest versions of MSVC are incompatible with the Unreal Engine codebase. If you receive errors related to 
+`std::__feature` or the like, you likely have the wrong build tools version installed. If you look near the start of the 
+UnrealBuildTool output, it will print the build tools version that it has selected and where it is found. 
+
+If you have the wrong version installed and have already attempted to build your project, you may need to delete your 
+`Intermediate` folder after installing the correct version. 
+
+If you continue to have issues related to build tools, you might try uninstalling the preferred version and reinstalling 
+it.
+
+## Clang (Linux, macOS, Windows)
+
+On platforms other than Windows Unreal will use Clang to build your project. You can also use Clang on Windows but it 
+requires some setup.
 
 # Static/Dynamic Linking
 
