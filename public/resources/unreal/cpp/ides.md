@@ -4,6 +4,60 @@
 > The objectively correct choice between Visual Studio and Jetbrains Rider is Jetbrains Rider.
 > However, I've included a section below on Visual Studio in the case that you don't value your time.
 
+# Build Configurations
+
+Unreal has two "dimensions" that are part of each build configuration.
+
+# Target 
+
+First there is the Target (Editor or Game)
+- Editor: Builds and runs the [Editor target](./build). C++ is compiled with `WITH_EDITOR` and related macros set to true. This type of build supports loading "normal" (properly "uncooked") Unreal assets as well as cooked assets.
+- Game: Builds and runs the [Game target](./build). C++ is compiled with `WITH_EDITOR` cleared. This type of build supports loading _only_ cooked assets. 
+
+When you package your game, Unreal builds the Game target. When you open the editor, Unreal builds (obviously) the Editor target.
+
+# Configuration
+
+The second dimension is how much optimization you want to apply. This is most akin to other development environments where you might have a "Debug" configuration where compiler optimizations are disabled for improved debugging support, and a "Release" configuration where compiler optimizations are present for better end-user performance.
+
+In the case of Unreal there is:
+- Debug: Everything (your code and the engine) is compiled without any compiler optimizations for full debuggability
+- DebugGame: Your code is compiled without any compiler optimizations for full debuggability
+  ✅ This is the one you should use most often
+- Development: Your code is compiled at a reasonable balance of optimization and debuggability
+- Shipping: Everything (your code and the engine) is fully optimized
+
+When you use a prepackaged Unreal Engine installation (ie a "launcher build") by installing it from the Epic Games Store launcher, the "Debug" configuration is not available, because the launcher build does not ship a version of Unreal that has been compiled with no optimizations. If you build Unreal from source however, this is available to you. Running the editor with optimizations fully disabled can be rather slow, so you'd want to do this only when you need to set breakpoints and inspect variables within the engine code.
+
+Note that it is not impossible to debug the engine's code when you are using DebugGame or Development configurations, but setting or hitting breakpoints may be unreliable and variable inspection may not be available or may even give you incorrect information. It's definitely more efficient and less confusing to use a fully unoptimized build ("Debug") for debugging the engine. 
+
+# Putting It Together
+
+In Visual Studio these two dimensions are shown _together_:
+- DebugGame Game
+- DebugGame Editor
+- Development Game
+- Development Editor
+- etc
+
+But the above explains how these are constructed.
+
+In Rider this is not the case, the IDE shows two distinct options, one for Target and one for Configuration.
+
+# "Game" Target and Cooking
+
+When you run any of the Game targets, you are running your game as it would behave _when packaged_. That's why you need to cook your assets before using this target. If you fail to cook, you will see an error message telling you that you need to cook, but if your cook is out of date, you can end up with outdated content within the game, or even strange errors due to the older cooked assets not lining up with the newer C++ code that you've compiled. 
+
+But this is important to note, that you _do not need to fully package the game to test how a packaged game should perform_. This has other implications, because you can easily run the Game target from your IDE _in its debugger_ allowing you to more easily investigate problems that only showed up after you packaged the game. 
+
+This isn't perfect, because a packaged game also loads your assets from `.pak` files, and in later versions of Unreal Engine the newer Zenloader and IOStore packaging technologies can introduce additional issues which may not appear until the final packaged game, but these issues are still rare. 
+
+# What Configuration does the Epic Games Launcher use?
+
+The Epic Games Launcher always runs your project in the Development configuration, even if you have been using DebugGame in your IDE. During startup it **does not rebuild your project when it is out of date** by default. You can enable the "Force Compilation at Startup" editor setting to force the editor to rebuild your project when needed. 
+
+This is important because your last Development build may be out of date compared to the code you've written! This can very easily cause problems or prevent the editor from starting or prevent your game from being played.
+
 # Rider
 
 [Jetbrains Rider](https://www.jetbrains.com/rider/) offers Unreal-specific features which are very useful: No need 
