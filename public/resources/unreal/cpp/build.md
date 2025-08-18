@@ -165,6 +165,10 @@ tools version and it will use it __if it is installed__, otherwise it will try t
 Unreal Release Notes for the specific engine version you are using (search MSVC or Build Tools), or check the 
 `Engine\Config\Windows\Windows_SDK.json` file within your engine (this file is visible within your IDE as well). 
 
+> [!NOTE]
+> In Unreal Engine 5.3 and earlier `Windows_SDK.json` does not exist. The preferred build tools versions are 
+> found in `/Engine/Source/Programs/UnrealBuildTool/Platform/Windows/MicrosoftPlatformSDK.Versions.cs` instead.
+
 The newest versions of MSVC are incompatible with the Unreal Engine codebase. If you receive errors related to 
 `std::__feature` or the like, you likely have the wrong build tools version installed. If you look near the start of the 
 UnrealBuildTool output, it will print the build tools version that it has selected and where it is found. 
