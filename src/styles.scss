@@ -3,10 +3,9 @@
 @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Raleway:ital,wght@0,100..900;1,100..900&display=swap');
 
 $site-background: #08141b;
+$accent-color: #ff7676;
 
-* {
-    box-sizing: border-box;
-}
+* { box-sizing: border-box; }
 
 html, body {
     font-family: "Raleway", sans-serif;
@@ -23,7 +22,7 @@ html, body {
 }
 
 a {
-    color: #ff7676;
+    color: $accent-color;
     text-decoration: none;
 
     &:hover {
