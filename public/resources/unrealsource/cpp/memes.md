@@ -149,3 +149,81 @@ Some suggestions were thrown out like "casio" and "buttercup" before we ultimate
 ...or as Jeff referred to him, "the admin of the server".
 
 This has been an extremely long running meme, and though Jeff has seemingly calmed down as he's matured into adulthood, references to it are a regular occurrence in the server. 
+
+
+## Getting Dietered ![dietered](/public/images/unrealsource/dietered/dietered.png)
+
+![That's what I said --dieter](/public/images/unrealsource/dietered/thats-what-i-said.png)
+
+<style>
+    img[alt="dietered"] {
+        height: 2em;
+        vertical-align: middle;
+    }
+    img[alt="That's what I said --dieter"] {
+        width: 50%;
+        float: left;
+        margin: 1em;
+    }
+    @media (max-width: 450px) {
+        img[alt="That's what I said --dieter"] {
+            width: 100%;
+            float: none;
+            margin: 0;
+        }
+    }
+</style>
+
+<div style="font-size: 150%; font-style: oblique;">
+    <p>For whatever reason Dieter constantly seems to find himself in the situation of having proposed a working 
+    solution to an inquiry much earlier (sometimes hours) before the inquisitor finally accepts the same solution 
+    presented by another chatter.</p>
+    <p>This became so common that it became a verb. We've all got dietered once or twice, but Dieter is the king of getting dietered. Some say he likes it that way.</p>
+</div>
+
+<div style="clear: both;"></div>
+
+```yaml
+{
+    $type: 'discord',
+    author: 'Blue Man',
+    date: '6/24/2021, 6:54 AM',
+    content: '@Dieter how do you feel about your pfp being used for an emoji, just asking for no reason at all',
+    link: 'https://discord.com/channels/187217643009212416/221796616653373441/981274890571218964'
+}
+```
+
+
+```yaml
+{
+    $type: 'discord',
+    author: 'Eren',
+    date: '6/5/2022 2:44PM',
+    content: '@Dieter will you add you become a meme and an emoji in this server to your cv?',
+    link: 'https://discord.com/channels/187217643009212416/221799439008923648/983124242721812570'
+}
+```
+
+```yaml
+{
+    $type: 'discord',
+    author: 'Dieter',
+    date: '6/5/2022 2:44PM',
+    content: '_will_ implies future tense',
+    link: 'https://discord.com/channels/187217643009212416/221799439008923648/983124303367274496'
+}
+```
+
+---
+
+```yaml
+{
+    $type: 'discord',
+    author: 'Josai',
+    date: '6/24/2021, 6:54 AM',
+    content: 'Did I just get dietered?',
+    link: 'https://discord.com/channels/187217643009212416/221799439008923648/857619799576412160'
+}
+```
+
+---
