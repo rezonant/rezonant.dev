@@ -5,6 +5,7 @@
 - [Lighting](./unreal/lighting.md)
 - [Navigation](./unreal/navigation.md)
 - [Splines](./unreal/splines.md)
+- [Nanite](./unreal/nanite.md)
 
 # Communities
 
