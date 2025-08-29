@@ -66,7 +66,6 @@ export class MarkdownToHtmlPipe implements PipeTransform {
                 }
             }
 
-            console.log(`parsed object: `, object);
             if (object.$type === 'discord') {
                 let message: DiscordMessage = object;
 
