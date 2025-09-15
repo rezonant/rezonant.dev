@@ -6,6 +6,7 @@
 - [Navigation](./unreal/navigation.md)
 - [Splines](./unreal/splines.md)
 - [Nanite](./unreal/nanite.md)
+- [ReleaseNotes](./unreal/release-notes.md)
 
 # Communities
 
