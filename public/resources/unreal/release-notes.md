@@ -7,7 +7,10 @@ must agree to the Unreal Engine EULA to access the repository.
 ## Unreal Engine 5
 
 Epic still hosts these (for now!)
-- [5.6](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-6-release-notes)
+- [5.7](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-7-release-notes)
+    * Released: Nov 12, 2025
+    * [Github](https://github.com/EpicGames/UnrealEngine/releases/tag/5.7.0-release)
+- [5.6](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-6-release-notes?application_version=5.6)
     * Released: Jun 3, 2025
     * [Github](https://github.com/EpicGames/UnrealEngine/releases/tag/5.6.0-release)
 - [5.5](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-engine-5-5-release-notes)
