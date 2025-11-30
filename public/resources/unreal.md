@@ -20,6 +20,7 @@
 - [zomg's Notes](https://zomgmoz.tv/unreal/)
 - [itsBaffled's Blog](https://itsbaffled.github.io/)
 - [Northstar Dev Blog](https://dev.northstarhana.com/)
+- [Daft Software Blog](https://blog.daftsoftware.com/)
 - [WizardCell's Unreal Blog](https://wizardcell.com/unreal/)
 
 # Guides, Wikis, and Deep Dives
