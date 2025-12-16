@@ -7,13 +7,13 @@
 
 a {
     opacity: 0.25;
-
+    transition: opacity 300ms ease-in-out;
 
     &:hover {
-    opacity: 1;
+        opacity: 0.99;
     }
 
     img {
-    height: 24px;
+        height: 24px;
     }
 }
