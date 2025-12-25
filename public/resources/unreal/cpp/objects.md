@@ -7,25 +7,11 @@ Here's some notes about Unreal's object system.
 
 ## UObject
 
-The vast majority of heap-allocated objects within Unreal Engine (and the games built on them) are `UObjects`.
+The vast majority of heap-allocated objects within Unreal Engine (and the games built on it) are `UObjects`.
 `UObjects` add several features on top of plain C++ objects including introspectability, serializability, 
 garbage collection and more. 
 
 UObject classes are created using Unreal's `NewObject()` function, _not `new` and related `std` allocating facilities_.
-
-## Outers
-
-When constructing a UObject using `NewObject()`, you can specify an "Outer" object. Outers in Unreal are used for 
-various purposes such as serialization (`FPackage` uses it to know whether an object belongs in a package for instance), 
-informational ownership (when debugging it can be useful to know what object is the "instigator" in a similar manner 
-to the Instigator property of Actors), and allowing the object to retrieve its context without having to specify a 
-specific property (for instance an Actor should be able to get its World, and an object "owned" by an Actor should be 
-able to get its Actor).
-
-The GC does follow the path from a reachable object to its Outer, meaning the Outer is a "strong" GC relationship.
-The reverse is not true: A reachable Outer object will not keep its "child objects" alive. Note that regardless of this, 
-it is still possible for an object's Outer to be destroyed if the `MarkGarbage()` function is used on the Outer object
-(which can result in the Outer property to become null if automatic nulling is enabled).
 
 ## Reflection
 
@@ -100,18 +86,18 @@ reachability graph are considered "dead" and are ultimately destroyed.
 In addition to pointers to other `UObject`s, the garbage collector is able to traverse the container types supported 
 by Unreal's reflection system such as `TArray`, `TMap`, `TSet`.
 
-## When Does Garbage Collection Occur?
+### When Does Garbage Collection Occur?
 
 Garbage collection occurs periodically on the game thread, meaning other work that needs to synchronize with the game 
 thread must wait while garbage collection occurs. Most of the time garbage collection takes minimal time, but in 
 extreme cases garbage collection can cause your game to hitch.
 
-## Can Garbage Collection delete objects while my function is running on the game thread? 
+### Can Garbage Collection delete objects while my function is running on the game thread? 
 
 No. Because GC happens on the main thread, it also means that the GC will never delete objects while you hold them, 
 because the GC is not running yet when your code is running.
 
-## Can Garbage Collection delete objects while my function is running on a different thread?
+### Can Garbage Collection delete objects while my function is running on a different thread?
 
 Yes. When accessing UObjects on other threads, you must ensure that the object cannot be destroyed while your code is 
 running. This can be done using `FGCScopeGuard` which prevents GC from running at all while your code is running, but 
@@ -120,7 +106,7 @@ the game thread, pass it for work on a background thread, and then use `TWeakObj
 `TStrongObjectPtr`, which you can discard when you are done with your work, ensuring that the object remains available 
 for the duration you need it, and then is available for destruction by the GC after your work is complete.
 
-## Incremental Garbage Collection
+### Incremental Garbage Collection
 
 While Unreal's GC is quite efficient, GC hitches can still occur when a lot of UObjects are present, or a lot of them 
 are destroyed at once. To address this, newer versions of Unreal include support for "Incremental Garbage Collection". 
@@ -144,14 +130,15 @@ properties, and never on the stack or in non-UObject classes and structs (use no
 provides automatic implicit conversions to/from raw pointers, including conversions for containers containing 
 `TObjectPtr` to/from containers containing raw pointers.
 
-## Auto Nulling
+## Explicit Destruction / Auto Nulling
 
 > [!IMPORTANT]
 > TLDR: Auto nulling applies to **all objects, not only Actors and Components.**
 
-The [Epic documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-object-handling-in-unreal-engine?application_version=5.5) 
-for Unreal Object Handling is incorrect at worst or misleadingly worded at best. Consider this quote from the Unreal 
-documentation (emphasis mine):
+Unreal supports explicit destruction of an object _in an indirect way_. You can mark an object as garbage (by calling `MarkGarbage()`) even when it is still reachable by living objects, and the garbage collector will modify the known references to that object to be `nullptr` the next time it runs, thus allowing it to collect the object immediately. This functionality can be disabled by setting `gc.GarbageElimination` to `0` (previously known as `gc.PendingKillEnabled`). This is commonly referred to as "auto nulling".
+
+If you read the [Epic documentation](https://dev.epicgames.com/documentation/en-us/unreal-engine/unreal-object-handling-in-unreal-engine?application_version=5.5) 
+for Unreal Object Handling you would be forgiven for thinking auto-nulling only occurs for actors and actor components.
 
 > When an **AActor or UActorComponent** is destroyed or otherwise removed from play, all references to it that are 
 visible to the reflection system (UProperty pointers and pointers stored in Unreal Engine container classes such as 
@@ -199,6 +186,21 @@ the Object it points to is destroyed.
 Another case where a referenced `UObject` `UPROPERTY` will be automatically null'ed is when using 'Force Delete' on 
 an asset in the editor. As a result, all code operating on `UObject` instances which are assets must handle these 
 pointers becoming null.
+
+## Outers
+
+When constructing a UObject using `NewObject()`, you can specify an "Outer" object. Outers in Unreal are used for 
+various purposes such as serialization (`FPackage` uses it to know whether an object belongs in a package for 
+instance), informational ownership (when debugging it can be useful to know what object is the "instigator" in a 
+similar manner to the Instigator property of Actors), and allowing the object to retrieve its context without having 
+to specify a specific property (for instance an Actor should be able to get its World, and an object "owned" by an 
+Actor should be able to get its Actor).
+
+When walking the object graph to find reachable objects, the garbage collector will follow objects' Outers, meaning the Outer is effectively a "strong" GC relationship: A reachable "child" object will keep an otherwise unreachable "outer" object alive. 
+
+The reverse is not true: A reachable Outer object will not keep its "child objects" alive. 
+
+A common misconception is that Outers serve as a way to "group" allocations, that destroying an Outer has the effect of destroying all children, but this is not the case. If you call `MarkGarbage()` on an Outer object, garbage collection of that object will be prevented if there are any reachable "child" objects outstanding. Thus it is not possible for the Outer relationship to be "auto nulled".
 
 ## Testing
 
