@@ -8,6 +8,8 @@
 - [Nanite](./unreal/nanite.md)
 - [ReleaseNotes](./unreal/release-notes.md)
 - [Asset Manager](./unreal/asset-manager.md)
+- [Asset Registry](./unreal/asset-registry.md)
+- [Streamable Manager](./unreal/streamable-manager.md)
 
 # Communities
 

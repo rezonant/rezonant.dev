@@ -1,8 +1,8 @@
 # Asset Manager
 
-The Unreal Asset Manager (not to be confused with the Asset Registry or the Streamable Manager) 
-provides dependency management, bundling and introspection of a special group of assets called 
-"primary" assets. You define which assets are "primary", and the asset manager determines which 
+The Unreal Asset Manager (not to be confused with the [Asset Registry](./asset-registry.md) or the 
+[Streamable Manager](./streamable-manager.md)) provides dependency management, bundling and introspection of a special 
+group of assets called "primary" assets. You define which assets are "primary", and the asset manager determines which 
 other assets the primary assets depend on and labels them "secondary" assets.
 
 There are several reasons to do this:
