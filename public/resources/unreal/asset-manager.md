@@ -116,3 +116,36 @@ Instead, use Asset Audit tool! Find it under Tools -> Asset Audit.
 To see what assets have been assigned to a specific Primary Asset type, click "Add Primary Asset Type" and choose the 
 type you want. If you make changes to your rules, you'll need to click "Clear Assets" and then choose your Primary 
 Asset Type again.
+
+# Loading Behavior
+
+Primary Assets are not loaded automatically for you (you wouldn't want this behavior anyway if your assets are very 
+large). You must load them by using the "Load Async Primary Assets" (or related Blueprint nodes) or by using 
+`GEngine->AssetManager->LoadPrimaryAssetsWithType()` (or related functions). Unlike loading an asset in other ways,
+once you load a primary asset, it will remain loaded until you request that the asset be unloaded via the asset manager.
+
+When unloading assets via the asset manager, it only releases the lock on them that keeps them loaded when unreferenced.
+If something else references them, they will continue to be loaded. Thus it is a common pattern to Load a primary asset,
+set a reference to the asset somewhere, and then immediately Unload that primary asset so that it can be automatically
+freed once it is no longer used.
+
+## Loading in the Editor
+
+During Play In Editor/Simulate In Editor (PIE/SIE), your game world shares the Asset Manager with the editor world. 
+Since the editor marks assets that are loaded in asset windows with the `RF_Standalone` flag (which tells the GC to 
+leave it loaded even when unreferenced), calls that do not perform loading like `GEngine->AssetManager->GetPrimaryAssetObject()`, the "Get Object from Primary Asset Id" Blueprint node, or resolving a
+`TSoftObjectPtr` or Blueprint soft object reference without first ensuring its loaded may immediately return the object
+when in PIE, but will not work when you play your game in Standalone (`-game`) or when playing a cooked/packaged game.
+
+To ensure you are properly handling loading and not unintentionally relying on assets already loaded in the editor, you should try your experience in Standalone mode where assets (primary or not) will not be loaded ahead of play.
+
+# Custom Asset Managers
+
+Like many other Unreal Engine classes, you can substitute in your own `UAssetManager` subclass to be used instead of 
+relying on `UAssetManager` itself. To do this, visit Project Settings -> Engine -> General Settings and set your class
+in the "Asset Manager Class" property, or set `AssetManagerClassName` in the `/Script/Engine.Engine` section of `DefaultEngine.ini`.
+
+This enables a lot of customization opportunities for how primary assets work, are loaded, etc. One example mentioned 
+above is customizing the primary asset types and/or IDs assigned to engine-provided asset classes like textures and 
+materials, but there are many other useful customizations that can be made. Consult the virtual methods of 
+`UAssetManager` for more information.
