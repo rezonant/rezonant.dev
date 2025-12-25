@@ -7,6 +7,7 @@
 - [Splines](./unreal/splines.md)
 - [Nanite](./unreal/nanite.md)
 - [ReleaseNotes](./unreal/release-notes.md)
+- [Asset Manager](./unreal/asset-manager.md)
 
 # Communities
 
