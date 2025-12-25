@@ -95,3 +95,24 @@ Each entry has the following fields:
     * **Cook Rule**: Allows you to influence how cooking applies to the primary asset and its 
       secondary assets. You can enforce that a primary asset will always be cooked, never cooked (generating an error if something uses it), or various other rules. You usually want to use "Always Cook" here if you want these assets to always be enumerable and available for loading in cooked builds, even if nothing otherwise directly depends on them.
 
+# Better Primary Asset Type Names
+
+A common pattern is to override `GetPrimaryAssetId()` for the purpose of changing the primary asset type name that 
+your assets use. For instance if you have a class `URPGItem`, you may want your assets to use the primary asset type 
+`Item` instead of `RPGItem`. You can call `Super::GetPrimaryAssetId()` and use the ID portion of the result along 
+with your custom type for an easy implementation.
+
+## Blueprint-based Primary Data Asset Base Classes
+
+For reasons as yet unknown, there is no way to override `GetPrimaryAssetId()` from within a Blueprint subclass of 
+`UPrimaryDataAsset` (shown as "Primary Data Asset" within the Blueprint editor). This not only means you are stuck 
+with using the Blueprint class name as the primary asset type, but since it will be based on the Blueprint _Generated Class_ name, it will be suffixed with "_C". There is no way around this without a C++ base class, you will have to use (for instance) "BP_Item_C" as the primary asset type. **Make sure to include the _C suffix in the Primary Asset Type configuration in your Asset Manager settings or else they won't match!**
+
+# Inspecting Primary Assets
+
+You don't need to actually play your game to inspect how the asset manager has applied your rules to your assets. 
+Instead, use Asset Audit tool! Find it under Tools -> Asset Audit.
+
+To see what assets have been assigned to a specific Primary Asset type, click "Add Primary Asset Type" and choose the 
+type you want. If you make changes to your rules, you'll need to click "Clear Assets" and then choose your Primary 
+Asset Type again.
