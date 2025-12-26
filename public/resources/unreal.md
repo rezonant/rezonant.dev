@@ -33,15 +33,21 @@
 - [Donald Wu's Unreal Source Explained](https://github.com/donaldwuid/unreal_source_explained/tree/master)
 - [Unreal Community Wiki](https://unrealcommunity.wiki/)
 
-# Free Tools, Plugins, Libraries, Language Support
+# Tools
 - [Blueprint UE](http://blueprintue.com/) - Share Blueprints online
+
+# Language Support / Scripting
 - [Unreal Sharp](https://www.unrealsharp.com/) - Support for C# scripting
-- [UE5Coro](https://github.com/landelare/ue5coro) - Support for C++ coroutines
-- [SubsystemBrowser](https://github.com/aquanox/SubsystemBrowserPlugin) - View and interact with Unreal subsystems within the editor
 - [Unreal Engine Angelscript](https://angelscript.hazelight.se/) - A popular text based scripting solution built by [Hazelight](https://www.hazelight.se/)
+
+# Frameworks
+- [UE5Coro](https://github.com/landelare/ue5coro) - Support for C++ coroutines
+
+# Plugins / Libraries
+- [SubsystemBrowser](https://github.com/aquanox/SubsystemBrowserPlugin) - View and interact with Unreal subsystems within the editor
+- [BlueprintComponentReference](https://github.com/aquanox/BlueprintComponentReferencePlugin) - A better alternative to `FComponentReference`
 - [Yap](https://github.com/HomerJohnston/Yap) - A dialog system built using FlowGraph
 - [K2PostIt](https://github.com/HomerJohnston/K2PostIt) - Better comment nodes for Blueprint
-
 
 # Paid Tools
 - [BP2CPP](https://zeroitlab.com/en/bp2cpp) - Non-destructively nativize Blueprints at cook time for a large performance boost.
