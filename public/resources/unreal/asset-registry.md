@@ -6,12 +6,7 @@ Plugin or the Engine itself) are considered assets.
 
 # What are Assets?
 
-Each `.uasset` file found in a `Content` directory is a serialized `UPackage` object. A `UPackage` contains a 
-collection of serialized `UObject` objects. Each asset package has a "main object" which is considered the "asset" 
-object. The main object is the one which has the same short name as the package object (ie given package 
-`/Game/Content/MyAsset`, the asset is the object inside the package with short name `MyAsset`).
-
-An object is considered part of a package if it has the `UPackage` in its Outer chain (see [Objects](./cpp/objects.md) for more information about Outers). A `UPackage`
+See the [dedicated overview page for the asset system](./assets.md).
 
 # Obtaining the Asset Registry
 
@@ -28,3 +23,11 @@ It is typical to wrap this in a `GetAssetRegistry` call with a local cache of th
 
 The asset registry saves numerous details about each asset as `FAssetData` object which can be queried without loading 
 the asset itself. 
+
+# Learn More
+
+- [Assets](./assets.md) -- An overview of Unreal's asset system
+- [Asset Manager](./asset-manager.md) -- Provides high-level querying, grouping, and loading/unloading of "primary" 
+  assets
+- [Streamable Manager](./streamable-manager.md) -- Provides a common streaming system for large assets which may exist 
+  in various streaming states, such as textures, static/skeletal meshes, or audio.

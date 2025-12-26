@@ -1,5 +1,10 @@
 # Asset Manager
 
+> Resources
+> - [Asset Manager Explained | Inside Unreal](https://www.youtube.com/watch?v=9MGHBU5eNu0) -- An introduction to the 
+>   asset manager by the original author of the system
+> - [Epic Docs](https://dev.epicgames.com/documentation/en-us/unreal-engine/asset-management-in-unreal-engine)
+
 The Unreal Asset Manager (not to be confused with the [Asset Registry](./asset-registry.md) or the 
 [Streamable Manager](./streamable-manager.md)) provides dependency management, bundling and introspection of a special 
 group of assets called "primary" assets. You define which assets are "primary", and the asset manager determines which 
