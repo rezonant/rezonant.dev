@@ -190,17 +190,26 @@ pointers becoming null.
 ## Outers
 
 When constructing a UObject using `NewObject()`, you can specify an "Outer" object. Outers in Unreal are used for 
-various purposes such as serialization (`FPackage` uses it to know whether an object belongs in a package for 
+various purposes such as serialization (`UPackage` uses it to know whether an object belongs in a package for 
 instance), informational ownership (when debugging it can be useful to know what object is the "instigator" in a 
 similar manner to the Instigator property of Actors), and allowing the object to retrieve its context without having 
 to specify a specific property (for instance an Actor should be able to get its World, and an object "owned" by an 
 Actor should be able to get its Actor).
 
-When walking the object graph to find reachable objects, the garbage collector will follow objects' Outers, meaning the Outer is effectively a "strong" GC relationship: A reachable "child" object will keep an otherwise unreachable "outer" object alive. 
+For the purposes of clear communication in this section, we will refer to objects which have a given object specified as
+their Outer as "Inners" (ie, each Outer has several Inners). This is also the terminology used within the engine source
+code. 
 
-The reverse is not true: A reachable Outer object will not keep its "child objects" alive. 
+When walking the object graph to find reachable objects, the garbage collector will follow objects' Outers, meaning the 
+Outer is effectively a "strong" GC relationship: A reachable Inner object will keep an otherwise unreachable "outer" 
+object alive. 
 
-A common misconception is that Outers serve as a way to "group" allocations, that destroying an Outer has the effect of destroying all children, but this is not the case. If you call `MarkGarbage()` on an Outer object, garbage collection of that object will be prevented if there are any reachable "child" objects outstanding. Thus it is not possible for the Outer relationship to be "auto nulled".
+The reverse is not true: A reachable Outer object will not keep its Inners alive. 
+
+A common misconception is that Outers serve as a way to "group" allocations, that destroying an Outer has the effect of 
+destroying all Inners, but this is not the case. If you call `MarkGarbage()` on an Outer object, garbage collection of 
+that object will be prevented if there are any reachable Inner objects outstanding. Thus it is not possible for the 
+Outer relationship to be "auto nulled".
 
 ## Testing
 
@@ -211,9 +220,9 @@ Details panel for the test you'd like to run. Each test takes 3 seconds to allow
 The result of the tests are:
 - Does auto-nulling apply to all objects: YES
 - Does auto-nulling make Outer null: NO
-- Does destroying Outer cause child object to be destroyed: NO
-- Does a reachable child keep an unreachable outer alive: YES
-- Does a reachable outer keep an unreachable child alive: NO
+- Does destroying Outer cause Inner object to be destroyed: NO
+- Does a reachable Inner keep an unreachable Outer alive: YES
+- Does a reachable Outer keep an unreachable Inner alive: NO
 
 The test code in full:
 ```cpp
@@ -241,10 +250,10 @@ public:
 	// TESTS /////////////////////////////////////////////////////////////////////////////////////////////////////////
 	
 	UFUNCTION(CallInEditor)
-	void Test_ReachableChildUnreachableOuter()
+	void Test_ReachableInnerUnreachableOuter()
 	{
 		Test(
-			"Does a reachable child keep an unreachable outer alive", 
+			"Does a reachable Inner keep an unreachable Outer alive", 
 			[] (auto* Actor) {
 				Actor->Weak1 = NewObject<UTestObject>();
 				Actor->Strong1 = NewObject<UTestObject>(Actor->Weak1.Get());
@@ -256,10 +265,10 @@ public:
 	}
 	
 	UFUNCTION(CallInEditor)
-	void Test_ReachableOuterUnreachableChild()
+	void Test_ReachableOuterUnreachableInner()
 	{
 		Test(
-			"Does a reachable outer keep an unreachable child alive", 
+			"Does a reachable Outer keep an unreachable Inner alive", 
 			[] (auto* Actor) {
 				Actor->Strong1 = NewObject<UTestObject>();
 				Actor->Weak1 = NewObject<UTestObject>(Actor->Strong1.Get());
@@ -302,10 +311,10 @@ public:
 	}
 	
 	UFUNCTION(CallInEditor)
-	void Test_DestroyingOuterDestroysChildren()
+	void Test_DestroyingOuterDestroysInners()
 	{
 		Test(
-			"Does destroying Outer cause child object to be destroyed", 
+			"Does destroying Outer cause Inner object to be destroyed", 
 			[] (auto* Actor) {
 				Actor->Strong1 = NewObject<UTestObject>();
 				Actor->Strong2 = NewObject<UTestObject>(Actor->Strong1);
