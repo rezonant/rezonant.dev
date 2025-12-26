@@ -39,6 +39,9 @@
 - [UE5Coro](https://github.com/landelare/ue5coro) - Support for C++ coroutines
 - [SubsystemBrowser](https://github.com/aquanox/SubsystemBrowserPlugin) - View and interact with Unreal subsystems within the editor
 - [Unreal Engine Angelscript](https://angelscript.hazelight.se/) - A popular text based scripting solution built by [Hazelight](https://www.hazelight.se/)
+- [Yap](https://github.com/HomerJohnston/Yap) - A dialog system built using FlowGraph
+- [K2PostIt](https://github.com/HomerJohnston/K2PostIt) - Better comment nodes for Blueprint
+
 
 # Paid Tools
 - [BP2CPP](https://zeroitlab.com/en/bp2cpp) - Non-destructively nativize Blueprints at cook time for a large performance boost.
