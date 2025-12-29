@@ -1,10 +1,11 @@
 import { MassElement, MassElementRef, MassFragmentRef, MassModule, MassPlugin, MassTag } from "./mass-types";
 
-const F_MASS_TAG: MassElementRef = { id: 'FMassTag', module: 'MassEntity' };
-const F_MASS_FRAGMENT: MassElementRef = { id: 'FMassFragment', module: 'MassEntity' }
-const F_MASS_CONST_SHARED_FRAGMENT: MassElementRef = { id: 'FMassConstSharedFragment', module: 'MassEntity' }
-const U_MASS_TRANSLATOR: MassElementRef = { id: 'UMassTranslator', module: 'MassSpawner' }
-const U_MASS_PROCESSOR: MassElementRef = { id: 'UMassProcessor', module: 'MassEntity' }
+export const F_MASS_TAG: MassElementRef = { id: 'FMassTag', module: 'MassEntity' };
+export const F_MASS_FRAGMENT: MassElementRef = { id: 'FMassFragment', module: 'MassEntity' }
+export const F_MASS_CONST_SHARED_FRAGMENT: MassElementRef = { id: 'FMassConstSharedFragment', module: 'MassEntity' }
+export const U_MASS_TRANSLATOR: MassElementRef = { id: 'UMassTranslator', module: 'MassSpawner' }
+export const U_MASS_PROCESSOR: MassElementRef = { id: 'UMassProcessor', module: 'MassEntity' }
+export const U_MASS_ENTITY_TRAIT_BASE: MassElementRef = { id: 'UMassEntityTraitBase', module: 'MassSpawner' }
 
 interface ModuleBuilder {
     ref(id: string, moduleId?: string): MassElementRef;

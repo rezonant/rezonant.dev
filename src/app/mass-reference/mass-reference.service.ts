@@ -1,6 +1,6 @@
 import { ElementRef, Injectable } from "@angular/core";
 import { MassElement, MassElementRef, MassFragment, MassModule, MassPlugin, MassProcessor, MassTag, MassTrait } from "./mass-types";
-import { MASS_REFERENCE } from "./mass-reference-data";
+import { F_MASS_FRAGMENT, F_MASS_TAG, MASS_REFERENCE, U_MASS_ENTITY_TRAIT_BASE, U_MASS_PROCESSOR } from "./mass-reference-data";
 
 @Injectable()
 export class MassReferenceService {
@@ -71,6 +71,13 @@ export class MassReferenceService {
             module.processors?.forEach(t => (t as any).module = module.id);
             module.fragments?.forEach(t => (t as any).module = module.id);
             module.tags?.forEach(t => (t as any).module = module.id);
+        }
+
+        for (let module of this.modules) {
+            module.traits?.forEach(t => t.parent ??= U_MASS_ENTITY_TRAIT_BASE);
+            module.processors?.forEach(t => t.parent ??= U_MASS_PROCESSOR);
+            module.fragments?.forEach(t => t.parent ??= F_MASS_FRAGMENT);
+            module.tags?.forEach(t => t.parent ??= F_MASS_TAG);
         }
 
         // Relate processors to traits
