@@ -13,6 +13,7 @@ import { CommonUiModule } from "../../common-ui";
 import { MassElementListComponent } from "./element-list.component";
 import { MassPluginComponent } from "./mass-plugin/mass-plugin.component";
 import { MaterialModule } from "../material.module";
+import { MassTagComponent } from "./mass-tag/mass-tag.component";
 
 @NgModule({
     declarations: [
@@ -23,7 +24,8 @@ import { MaterialModule } from "../material.module";
         MassFragmentComponent,
         MassElementComponent,
         MassElementListComponent,
-        MassPluginComponent
+        MassPluginComponent,
+        MassTagComponent
     ],
     providers: [
         MassReferenceService

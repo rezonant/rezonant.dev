@@ -40,10 +40,12 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     }
                 ],
                 fragments: [
+                    { id: 'FMassFragment' },
                     { id: 'FMassDebugLogFragment' },
                     { id: 'FMassConstSharedFragment' }
                 ],
                 processors: [
+                    { id: 'UMassProcessor' },
                     { id: 'UMassObserverProcessor' },
                     { id: 'UMassCompositeProcessor' }
                 ]

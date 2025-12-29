@@ -44,6 +44,9 @@ import { MassReferenceService } from "../mass-reference.service";
                         @case ('fragment') {
                             <rez-mass-fragment [moduleId]="module().id" [fragment]="asAny(element())" />
                         }
+                        @case ('tag') {
+                            <rez-mass-tag [moduleId]="module().id" [tag]="asAny(element())" />
+                        }
                         @default {
                             <em>Unknown element type {{ element().type }}</em>
                         }
