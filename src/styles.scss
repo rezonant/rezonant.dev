@@ -47,3 +47,110 @@ div.tag {
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
+
+
+mat-icon.inline {
+    vertical-align: middle;
+}
+
+ul.facts {
+    display: flex;
+    flex-wrap: wrap;
+    padding: 0;
+    li {
+        margin: 0;
+        list-style-type: none;
+        margin-right: 0.5em;
+        padding-right: 0.5em;
+        border-right: 1px solid #21597f;
+        &:last-child {
+            border-right: none;
+        }
+    }
+}
+
+
+blockquote {
+    border-left: 2px solid #55838d;
+    padding: 1em;
+    color: #55838d;
+    margin: 0;
+    background-color: #0e2433;
+
+    & > p {
+        margin: 0;
+        padding: 0;
+    }
+
+    & > ul {
+        margin: 0;
+    }
+
+    &.discord-message {
+        border: 1px solid #ff7676;
+        padding: 1em;
+        border-radius: 3px;
+        margin: 2em;
+
+        .byline {
+            display: flex;
+            gap: 0.5em;
+            align-items: center;
+            font-style: normal;
+        }
+
+        .author {
+            font-weight: bold;
+            font-size: 110%;
+        }
+
+        .discord-message-content {
+            padding: 0.5em 0;
+            font-size: 200%;
+            font-style: italic;
+        }
+
+        .discord-link {
+            display: block;
+            font-size: 80%;
+            opacity: 0.7;
+            text-align: right;
+        }
+    }
+}
+
+div.property {
+    display: flex;
+    align-items: flex-start;
+    margin: 0.5em 0;
+
+    label {
+        font-size: 90%;
+        font-weight: bold;
+        color: #666;
+        min-width: 8em;
+    }
+
+    &.long {
+        label {
+            min-width: 12em;
+        }
+    }
+
+    &.very-long {
+        label {
+            min-width: 16em;
+        }
+    }
+
+    ul {
+        margin: 0 0 0 0;
+        padding: 0 0 0 1.5em;
+        border-left: 4px solid #ccc;
+    }
+
+    blockquote {
+        padding-top: 0;
+        padding-bottom: 0;
+    }
+}

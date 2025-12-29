@@ -24,13 +24,44 @@ import { MassReferenceService } from "../mass-reference.service";
                 {{ id() }}
             </h1>
 
-            @let parent = element().parent;
+            <ul class="facts">
+                @if (element().stub) {
+                    <li>
+                        <div class="tag">stub</div>
+                    </li>
+                }
+                @let parent = element().parent;
+                @if (parent) {
+                    <li>Extends <a routerLink="/reference/unreal/mass/{{ parent.module }}/{{ parent.id }}">
+                        {{ parent.id }}
+                    </a></li>
+                }
+                @if (module()) {
+                    <li>
+                    <a routerLink="/reference/unreal/mass/{{ module().id }}">
+                        <mat-icon class="inline">group_work</mat-icon>
+                        {{ module().id }}
+                    </a>
+                    </li>
+                }
 
-            @if (parent) {
-                Extends <a routerLink="/reference/unreal/mass/{{ parent.module }}/{{ parent.id }}">
-                    {{ parent.id }}
-                </a>
-            }
+                @let plugin = module().plugin;
+                @if (plugin) {
+                    <li>
+                        <a routerLink="/reference/unreal/mass/plugins/{{ plugin }}">
+                            @if (plugin === 'Mass') {
+                                <mat-icon class="inline">foundation</mat-icon>
+                                Core
+                            } @else {
+                                <mat-icon class="inline">extension</mat-icon>
+                                {{ plugin }}
+                            }
+                        </a>
+                    </li>
+                }
+            </ul>
+
+
 
             <mat-tab-group [mat-stretch-tabs]="false">
                 <mat-tab label="Details">

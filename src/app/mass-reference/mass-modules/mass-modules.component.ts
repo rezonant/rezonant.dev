@@ -42,6 +42,12 @@ import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
                     <rez-mass-element-list name="Tags" [elements]="tags" />
                 </div>
             </mat-tab>
+            <mat-tab label="Stubs">
+                    <rez-mass-element-list name="Traits" [elements]="stubTraits" />
+                    <rez-mass-element-list name="Fragments" [elements]="stubFragments" />
+                    <rez-mass-element-list name="Processors" [elements]="stubProcessors" />
+                    <rez-mass-element-list name="Tags" [elements]="stubTags" />
+            </mat-tab>
             <mat-tab label="JSON">
                 <pre>{{modules | json}}</pre>
             </mat-tab>
@@ -95,6 +101,10 @@ export class MassModulesComponent {
     fragments: MassFragment[] = [];
     processors: MassProcessor[] = [];
     tags: MassTag[] = [];
+    stubTraits: MassTrait[] = [];
+    stubFragments: MassFragment[] = [];
+    stubProcessors: MassProcessor[] = [];
+    stubTags: MassTag[] = [];
 
     ngOnInit() {
         for (let module of this.modules) {
@@ -102,6 +112,11 @@ export class MassModulesComponent {
             this.fragments.push(...(module.fragments || []) as any);
             this.processors.push(...(module.processors || []) as any);
             this.tags.push(...(module.tags || []) as any);
+
+            this.stubTraits = this.traits.filter(x => x.stub);
+            this.stubFragments = this.fragments.filter(x => x.stub);
+            this.stubProcessors = this.processors.filter(x => x.stub);
+            this.stubTags = this.tags.filter(x => x.stub);
         }
     }
 }

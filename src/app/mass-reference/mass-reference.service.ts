@@ -59,6 +59,7 @@ export class MassReferenceService {
     }
 
     preprocess() {
+        // Ensure `type` is set
         for (let module of this.modules) {
             module.traits?.forEach(t => (t as any).type = 'trait');
             module.processors?.forEach(t => (t as any).type = 'processor');
@@ -66,6 +67,7 @@ export class MassReferenceService {
             module.tags?.forEach(t => (t as any).type = 'tag');
         }
 
+        // Ensure `module` is set
         for (let module of this.modules) {
             module.traits?.forEach(t => (t as any).module = module.id);
             module.processors?.forEach(t => (t as any).module = module.id);
@@ -73,11 +75,44 @@ export class MassReferenceService {
             module.tags?.forEach(t => (t as any).module = module.id);
         }
 
+        // Ensure `plugin` is set
+        for (let plugin of this.plugins) {
+            for (let module of plugin.modules || []) {
+                module.plugin = plugin.id;
+                module.traits?.forEach(t => t.plugin = plugin.id);
+                module.processors?.forEach(t => t.plugin = plugin.id);
+                module.fragments?.forEach(t => t.plugin = plugin.id);
+                module.tags?.forEach(t => t.plugin = plugin.id);
+            }
+        }
+
+        // Ensure `parent` is default base class unless otherwise specified
         for (let module of this.modules) {
             module.traits?.forEach(t => t.parent ??= U_MASS_ENTITY_TRAIT_BASE);
             module.processors?.forEach(t => t.parent ??= U_MASS_PROCESSOR);
             module.fragments?.forEach(t => t.parent ??= F_MASS_FRAGMENT);
             module.tags?.forEach(t => t.parent ??= F_MASS_TAG);
+        }
+
+        // Mark stubs
+        for (let module of this.modules) {
+            module.traits?.forEach(t => {
+                if (t.requiredFragments === undefined && t.addsFragments === undefined) {
+                    t.stub = true;
+                }
+            });
+            module.processors?.forEach(t => {
+                if (t.requiresFragments === undefined) {
+                    t.stub = true;
+                }
+            });
+            module.fragments?.forEach(t => {
+                if (t.properties === undefined)
+                    t.stub = true;
+            });
+            module.tags?.forEach(t => {
+                t.stub = false;
+            });
         }
 
         // Relate processors to traits

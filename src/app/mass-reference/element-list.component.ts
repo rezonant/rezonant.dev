@@ -102,10 +102,7 @@ export class MassElementListComponent {
             if (metadata) {
                 exists = true;
                 type = metadata.type;
-
-                let keys = Object.keys(metadata).filter(x => !['id', 'module', 'type', 'parent'].includes(x));
-                if (keys.length === 0)
-                    stub = true;
+                stub = metadata.stub ?? false;
             }
         }
 

@@ -10,21 +10,24 @@ export interface MassFragmentRef extends MassElementRef {
     shared?: boolean;
 }
 
-export interface MassTrait {
-    type: 'trait';
+export interface MassElementBase {
+    type: string;
     module?: string;
+    plugin?: string;
     parent?: MassElementRef;
+    stub?: boolean;
     id: string;
+}
+
+export interface MassTrait extends MassElementBase {
+    type: 'trait';
     requiredFragments?: MassElementRef[];
     addsFragments?: MassFragmentRef[];
     triggersProcessors?: MassElementRef[];
 }
 
-export interface MassFragment {
+export interface MassFragment extends MassElementBase {
     type: 'fragment';
-    module?: string;
-    id: string;
-    parent?: MassElementRef;
     properties?: MassFragmentProperty[];
 }
 
@@ -33,29 +36,30 @@ export interface MassFragmentProperty {
     type: string;
     parent?: MassElementRef;
     specifiers?: string[];
+    metaSpecifiers?: Record<string, string | undefined>;
     category?: string;
+    defaultValue?: string;
+    comment?: string;
+    visibility?: 'private' | 'public' | 'protected';
+    mutable?: boolean;
+    conditionals?: string[];
 }
 
-export interface MassProcessor {
+export interface MassProcessor extends MassElementBase {
     type: 'processor';
-    module?: string;
-    id: string;
-    parent?: MassElementRef;
     requiresFragments?: MassFragmentRef[];
     relatedTraits?: MassElementRef[];
 }
 
-export interface MassTag {
+export interface MassTag extends MassElementBase {
     type: 'tag';
-    module?: string;
-    id: string;
-    parent?: MassElementRef;
     deprecated?: string;
 }
 
 export interface MassModule {
     id: string;
     name?: string;
+    plugin?: string;
     traits?: (Omit<MassTrait, 'type'>)[];
     fragments?: (Omit<MassFragment, 'type'>)[];
     tags?: (Omit<MassTag, 'type'>)[];

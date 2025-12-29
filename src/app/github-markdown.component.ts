@@ -80,55 +80,6 @@ import { BehaviorSubject } from "rxjs";
                     margin-top: 0;
                 }
             }
-
-            blockquote {
-                border-left: 2px solid #55838d;
-                padding: 1em;
-                color: #55838d;
-                margin: 0;
-                background-color: #0e2433;
-
-                & > p {
-                    margin: 0;
-                    padding: 0;
-                }
-
-                & > ul {
-                    margin: 0;
-                }
-
-                &.discord-message {
-                    border: 1px solid #ff7676;
-                    padding: 1em;
-                    border-radius: 3px;
-                    margin: 2em;
-
-                    .byline {
-                        display: flex;
-                        gap: 0.5em;
-                        align-items: center;
-                        font-style: normal;
-                    }
-
-                    .author {
-                        font-weight: bold;
-                        font-size: 110%;
-                    }
-
-                    .discord-message-content {
-                        padding: 0.5em 0;
-                        font-size: 200%;
-                        font-style: italic;
-                    }
-
-                    .discord-link {
-                        display: block;
-                        font-size: 80%;
-                        opacity: 0.7;
-                        text-align: right;
-                    }
-                }
-            }
         }
 
         footer {
