@@ -1,4 +1,4 @@
-<h1>{{ title }}</h1>
+<h1 [innerHTML]="title | markdownToHtml | trustHtml"></h1>
 <rez-github-markdown
     project="rezonant/rezonant.dev"
     path="public/resources/{{ path }}.md"
@@ -7,4 +7,5 @@
     [urlTransformer]="urlTransformer"
     [consumeTitle]="true"
     (titleChange)="setTitle($event ?? '')"
+    (pageTitleChange)="setPageTitle($event ?? '')"
     />

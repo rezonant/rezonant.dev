@@ -15,7 +15,10 @@ export class ResourceComponent {
 
     setTitle(value: string) {
         this.title = value;
-        this.titleService.setTitle(`${value} - rezonant.dev`);
+    }
+
+    setPageTitle(value: string) {
+        this.titleService.setTitle(value ? `${value} - rezonant.dev` : 'rezonant.dev');
     }
 
     path: string | null = null;

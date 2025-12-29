@@ -23,6 +23,8 @@ export function resourceUrlTransformer(getPath: () => string): (url: string) => 
             }
 
             url = `${currentPath}/${url}`.replace(/\/+/g, '/');
+        } else if (url.startsWith('/')) {
+            return url;
         }
 
         url = `/resources/${url}`.replace(/\/+/g, '/');

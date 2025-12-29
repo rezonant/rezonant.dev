@@ -33,3 +33,17 @@ a {
         color: pink;
     }
 }
+
+div.tag {
+    display: inline-block;
+    padding: 0px 4px;
+    margin: 2px;
+    border: 1px solid rgb(0 148 245);
+    font-size: 70%;
+    border-radius: 4px;
+    background: rgb(20 76 113);
+    color: rgb(255 255 255);
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

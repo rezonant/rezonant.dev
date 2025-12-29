@@ -168,6 +168,9 @@ export class GithubMarkdownComponent {
     private _titleChange = new BehaviorSubject<string | undefined>(undefined);
     @Output() titleChange = this._titleChange.asObservable();
 
+    private _pageTitleChange = new BehaviorSubject<string | undefined>(undefined);
+    @Output() pageTitleChange = this._pageTitleChange.asObservable();
+
     @Input({ required: true }) get path() {
         return this._path;
     }
@@ -220,12 +223,19 @@ export class GithubMarkdownComponent {
         let response = await fetch(this.url);
         let readme = await response.text();
 
+        let titleRegex = /^<!--title:(.*)-->/
+        let titleMatch = readme.match(titleRegex);
+        if (titleMatch)
+            this._pageTitleChange.next(titleMatch[1]);
+
         if (this.consumeTitle) {
-            let titleRegex = /^# (.*)$/m;
-            let titleMatch = readme.match(titleRegex);
-            if (titleMatch) {
-                this._titleChange.next(titleMatch[1]);
-                readme = readme.replace(titleRegex, '');
+            let headerRegex = /^# (.*)$/m;
+            let headerMatch = readme.match(headerRegex);
+            if (headerMatch) {
+                this._titleChange.next(headerMatch[1]);
+                if (!titleMatch)
+                    this._pageTitleChange.next(headerMatch[1]);
+                readme = readme.replace(headerRegex, '');
             }
         }
 

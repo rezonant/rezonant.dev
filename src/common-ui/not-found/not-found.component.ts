@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 @Component({
   selector: 'rez-not-found',
@@ -6,5 +6,6 @@ import { Component } from '@angular/core';
   styleUrl: './not-found.component.scss'
 })
 export class NotFoundComponent {
-
+    title = input<string>('Nothing was ever here');
+    message = input<string>('You are imagining it.');
 }

@@ -12,8 +12,12 @@ import { MarkdownToHtmlPipe } from './markdown-to-html.pipe';
 import { GithubMarkdownComponent } from './github-markdown.component';
 import { TrustHtmlPipe } from './trust-html.pipe';
 import { ResourceComponent } from './resource/resource.component';
-import { NotFoundComponent } from './not-found/not-found.component';
 import { MyLinksComponent } from './my-links/my-links.component';
+import { RichContentService } from './rich-content.service';
+import { MassReferenceModule } from './mass-reference';
+import { CommonUiModule, NotFoundComponent } from '../common-ui';
+import { MaterialModule } from './material.module';
+import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 
 
 const pathMatcher: UrlMatcher = (segments: UrlSegment[], group: UrlSegmentGroup, route: Route) => {
@@ -40,11 +44,14 @@ const pathMatcher: UrlMatcher = (segments: UrlSegment[], group: UrlSegmentGroup,
         MarkdownToHtmlPipe,
         TrustHtmlPipe,
         GithubMarkdownComponent,
-        NotFoundComponent,
         MyLinksComponent
     ],
     imports: [
         BrowserModule,
+        BrowserAnimationsModule,
+        CommonUiModule,
+        MaterialModule,
+        MassReferenceModule,
         RouterModule.forRoot([
             { path: '', pathMatch: 'full', component: HomeComponent },
             { path: 'projects', pathMatch: 'full', component: ProjectsComponent },
@@ -58,11 +65,13 @@ const pathMatcher: UrlMatcher = (segments: UrlSegment[], group: UrlSegmentGroup,
                     // { path: '**', component: NotFoundComponent }
                 ]
             },
-            { path: '**', component: NotFoundComponent }
-        ])
+            { path: 'reference/unreal/mass', children: MassReferenceModule.routes() },
+            { path: '**', component: NotFoundComponent },
+        ], { bindToComponentInputs: true })
     ],
     providers: [
-        provideClientHydration()
+        provideClientHydration(),
+        RichContentService
     ],
     bootstrap: [AppComponent]
 })

@@ -1,0 +1,83 @@
+import { Component, computed, inject, input } from "@angular/core";
+import { MassReferenceService } from "../mass-reference.service";
+
+@Component({
+    selector: 'rez-mass-element',
+    template: `
+        @if (notFound()) {
+            <rez-not-found title="Element not found" message="">
+                <div>
+                    It may not be covered by this reference just yet.<br/>
+                    Consider <a href="https://github.com/rezonant/rezonant.dev">sending a pull request</a>
+                </div>
+            </rez-not-found>
+        } @else {
+            <h1>
+                <!-- <a routerLink="/reference/unreal/mass">
+                    Mass Reference
+                </a>
+                &raquo; -->
+                <a routerLink="/reference/unreal/mass/{{ module().id }}">
+                    {{ module().id }}
+                </a>
+                &raquo;
+                {{ id() }}
+            </h1>
+
+            @let parent = element().parent;
+
+            @if (parent) {
+                Extends <a routerLink="/reference/unreal/mass/{{ parent.module }}/{{ parent.id }}">
+                    {{ parent.id }}
+                </a>
+            }
+
+            <mat-tab-group [mat-stretch-tabs]="false">
+                <mat-tab label="Details">
+                    @switch (element().type) {
+                        @case ('trait') {
+                            <rez-mass-trait [moduleId]="module().id" [trait]="asAny(element())" />
+                        }
+                        @case ('processor') {
+                            <rez-mass-processor [moduleId]="module().id" [processor]="asAny(element())" />
+                        }
+                        @case ('fragment') {
+                            <rez-mass-fragment [moduleId]="module().id" [fragment]="asAny(element())" />
+                        }
+                        @default {
+                            <em>Unknown element type {{ element().type }}</em>
+                        }
+                    }
+                </mat-tab>
+                @if (subclasses().length > 0) {
+                    <mat-tab label="Subclasses">
+                        @for (subclass of subclasses(); track subclass.id) {
+                            <div>
+                                <a routerLink="/reference/unreal/mass/{{ subclass.module }}/{{ subclass.id }}">
+                                    {{ subclass.id }}
+                                </a>
+                            </div>
+                        }
+                    </mat-tab>
+                }
+                <mat-tab label="JSON">
+                    <pre>{{ element() | json }}</pre>
+                </mat-tab>
+            </mat-tab-group>
+
+        }
+    `,
+    standalone: false
+})
+export class MassElementComponent {
+    private ref = inject(MassReferenceService);
+
+    asAny = (t: any) => t;
+    moduleId = input.required<string>();
+    id = input.required<string>();
+
+    notFound = computed(() => !this.ref.getElement(this.moduleId(), this.id()));
+    module = computed(() => this.ref.getModule(this.moduleId())!);
+    element = computed(() => this.ref.getElement(this.moduleId(), this.id())!);
+    subclasses = computed(() => this.ref.getSubclasses({ id: this.id(), module: this.moduleId() }));
+}

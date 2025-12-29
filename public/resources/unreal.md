@@ -2,6 +2,7 @@
 
 - [C++](./unreal/cpp.md)
 - [Blueprint](./unreal/blueprint.md)
+- [Mass](./unreal/mass.md)
 - [Lighting](./unreal/lighting.md)
 - [Navigation](./unreal/navigation.md)
 - [Splines](./unreal/splines.md)
@@ -48,6 +49,9 @@
 - [BlueprintComponentReference](https://github.com/aquanox/BlueprintComponentReferencePlugin) - A better alternative to `FComponentReference`
 - [Yap](https://github.com/HomerJohnston/Yap) - A dialog system built using FlowGraph
 - [K2PostIt](https://github.com/HomerJohnston/K2PostIt) - Better comment nodes for Blueprint
+
+# Samples
+- [MassSample](https://github.com/Megafunk/MassSample) - A sample project using Mass
 
 # Paid Tools
 - [BP2CPP](https://zeroitlab.com/en/bp2cpp) - Non-destructively nativize Blueprints at cook time for a large performance boost.
