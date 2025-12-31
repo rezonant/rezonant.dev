@@ -329,7 +329,75 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                     {
                         id: 'UMassCrowdLODCollectorProcessor',
-                        parent: m.r('UMassLODCollectorProcessor').from('MassLOD')
+                        parent: m.r('UMassLODCollectorProcessor').from('MassLOD'),
+                        comment: 'Created a crowd version for parallelization of the crowd with the traffic',
+                        displayName: 'Crowd LOD Collection',
+                        requiresSubsystems: [
+                            m.r('UMassLODSubsystem')
+                        ],
+                        queries: [
+                            {
+                                id: 'BaseQuery',
+                                remark: unindent(
+                                    `
+                                    All other queries are based on this one.
+                                    `
+                                ),
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassViewerInfoFragment').from('MassLOD').readWrite(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassVisualizationChunkFragment').from('MassLOD').readOnly().optional(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassCollectLODViewerInfoTag').from('MassLOD').all(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_VisibleRangeAndOnLOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are in visible range and are On LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').none(),
+                                    m.r('FMassOffLODTag').none(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_VisibleRangeOnly',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are in visible range but are Off LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').none(),
+                                    m.r('FMassOffLODTag').all(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_OnLODOnly',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are NOT in visible range but are On LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').all(),
+                                    m.r('FMassOffLODTag').none(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_NotVisibleRangeAndOffLOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are Not in visible range and are at Off LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').all(),
+                                    m.r('FMassOffLODTag').all(),
+                                ]
+                            },
+                        ]
                     }
                 ]
             }))
