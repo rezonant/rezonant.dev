@@ -44,42 +44,6 @@ import { BehaviorSubject } from "rxjs";
                 border: 1px solid #346e96;
                 border-radius: 3px;
             }
-
-            .markdown-alert {
-                --alert-color: #ff7676;
-                border-radius: 5px;
-                border: 1px solid var(--alert-color);
-                padding: 1.5em 1.5em 0.5em 1.5em;
-                margin: 0.5em 0;
-                color: #cae8ef;
-                padding-left: 4em;
-
-                &.markdown-alert-note { --alert-color: #6d946d; }
-                &.markdown-alert-tip { --alert-color: #3fb1ff; }
-                &.markdown-alert-important { --alert-color: #bb7a03; }
-                &.markdown-alert-warning { --alert-color: yellow; }
-                &.markdown-alert-caution { --alert-color: red; }
-
-                p.markdown-alert-title {
-                    color: var(--alert-color);
-                    margin: 0;
-                    margin-left: -2em;
-                    display: flex;
-                    gap: 1em;
-                    align-items: center;
-                    padding-bottom: 0.5em;
-                    font-weight: bold;
-                    font-size: 120%;
-
-                    svg {
-                        fill: currentColor;
-                    }
-                }
-
-                p.markdown-alert-title + p {
-                    margin-top: 0;
-                }
-            }
         }
 
         footer {

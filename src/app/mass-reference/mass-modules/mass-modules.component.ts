@@ -36,17 +36,17 @@ import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
                         </ul>
                     </div>
 
-                    <rez-mass-element-list name="Traits" [elements]="traits" />
-                    <rez-mass-element-list name="Fragments" [elements]="fragments" />
-                    <rez-mass-element-list name="Processors" [elements]="processors" />
-                    <rez-mass-element-list name="Tags" [elements]="tags" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Traits" [elements]="traits" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Fragments" [elements]="fragments" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Processors" [elements]="processors" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Tags" [elements]="tags" />
                 </div>
             </mat-tab>
             <mat-tab label="Stubs">
-                    <rez-mass-element-list name="Traits" [elements]="stubTraits" />
-                    <rez-mass-element-list name="Fragments" [elements]="stubFragments" />
-                    <rez-mass-element-list name="Processors" [elements]="stubProcessors" />
-                    <rez-mass-element-list name="Tags" [elements]="stubTags" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Traits" [elements]="stubTraits" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Fragments" [elements]="stubFragments" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Processors" [elements]="stubProcessors" />
+                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Tags" [elements]="stubTags" />
             </mat-tab>
             <mat-tab label="JSON">
                 <pre>{{modules | json}}</pre>

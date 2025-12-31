@@ -14,10 +14,10 @@ import { MassReferenceService } from "../mass-reference.service";
             </h1>
 
             @if (module()) {
-                <rez-mass-element-list [module]="moduleId()" name="Tags" [elements]="module().tags" />
-                <rez-mass-element-list [module]="moduleId()" name="Fragments" [elements]="module().fragments" />
-                <rez-mass-element-list [module]="moduleId()" name="Traits" [elements]="module().traits" />
-                <rez-mass-element-list [module]="moduleId()" name="Processors" [elements]="module().processors" />
+                <rez-mass-element-list [showRemarks]="false" [module]="moduleId()" name="Tags" [elements]="module().tags" />
+                <rez-mass-element-list [showRemarks]="false" [module]="moduleId()" name="Fragments" [elements]="module().fragments" />
+                <rez-mass-element-list [showRemarks]="false" [module]="moduleId()" name="Traits" [elements]="module().traits" />
+                <rez-mass-element-list [showRemarks]="false" [module]="moduleId()" name="Processors" [elements]="module().processors" />
             }
         }
     `,

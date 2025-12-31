@@ -1,5 +1,6 @@
 import { Component, computed, inject, input } from "@angular/core";
 import { MassReferenceService } from "../mass-reference.service";
+import { MassProcessor } from "../mass-types";
 
 @Component({
     selector: 'rez-mass-element',
@@ -24,10 +25,19 @@ import { MassReferenceService } from "../mass-reference.service";
                 {{ id() }}
             </h1>
 
+
+            @if (element().displayName) {
+                <div class="property display-name">
+                    <label>Display Name</label>
+                    {{ element().displayName }}
+                </div>
+                <br/>
+            }
+
             <ul class="facts">
                 @if (element().stub) {
                     <li>
-                        <div class="tag">stub</div>
+                        <mat-icon matTooltip="This is a stub">broken_image</mat-icon>
                     </li>
                 }
                 @let parent = element().parent;
@@ -61,6 +71,16 @@ import { MassReferenceService } from "../mass-reference.service";
                 }
             </ul>
 
+            @let comment = element().comment;
+            @if (comment) {
+                <blockquote>{{ comment }}</blockquote>
+            }
+            @let remark = element().remark;
+            @if (remark) {
+                <div
+                    [innerHTML]="remark | markdownToHtml | trustHtml"
+                    ></div>
+            }
 
 
             <mat-tab-group [mat-stretch-tabs]="false">
@@ -99,6 +119,16 @@ import { MassReferenceService } from "../mass-reference.service";
                 </mat-tab>
             </mat-tab-group>
 
+        }
+    `,
+    styles: `
+
+        mat-icon {
+            vertical-align: middle;
+        }
+
+        h1:has(+ .display-name) {
+            margin-bottom: 0;
         }
     `,
     standalone: false

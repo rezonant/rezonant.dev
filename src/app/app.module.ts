@@ -8,12 +8,9 @@ import { HomeComponent } from './home/home.component';
 import { ProjectsComponent } from './projects/projects.component';
 import { BlogComponent } from './blog/blog.component';
 import { ResourcesComponent } from './resources/resources.component';
-import { MarkdownToHtmlPipe } from './markdown-to-html.pipe';
 import { GithubMarkdownComponent } from './github-markdown.component';
-import { TrustHtmlPipe } from './trust-html.pipe';
 import { ResourceComponent } from './resource/resource.component';
 import { MyLinksComponent } from './my-links/my-links.component';
-import { RichContentService } from './rich-content.service';
 import { MassReferenceModule } from './mass-reference';
 import { CommonUiModule, NotFoundComponent } from '../common-ui';
 import { MaterialModule } from './material.module';
@@ -41,8 +38,6 @@ const pathMatcher: UrlMatcher = (segments: UrlSegment[], group: UrlSegmentGroup,
         BlogComponent,
         ResourcesComponent,
         ResourceComponent,
-        MarkdownToHtmlPipe,
-        TrustHtmlPipe,
         GithubMarkdownComponent,
         MyLinksComponent
     ],
@@ -71,7 +66,6 @@ const pathMatcher: UrlMatcher = (segments: UrlSegment[], group: UrlSegmentGroup,
     ],
     providers: [
         provideClientHydration(),
-        RichContentService
     ],
     bootstrap: [AppComponent]
 })

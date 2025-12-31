@@ -1,26 +1,131 @@
-import { MassElement, MassElementRef, MassFragmentRef, MassModule, MassPlugin, MassTag } from "./mass-types";
+import { unindent } from "../../common-ui";
+import { MassElement, MassElementRef, MassFragmentRef, MassModule, MassPlugin, MassProcessingRequirement, MassProcessorExecutionFlag, MassTag } from "./mass-types";
 
 export const F_MASS_TAG: MassElementRef = { id: 'FMassTag', module: 'MassEntity' };
 export const F_MASS_FRAGMENT: MassElementRef = { id: 'FMassFragment', module: 'MassEntity' }
+export const F_MASS_SHARED_FRAGMENT: MassElementRef = { id: 'FMassSharedFragment', module: 'MassEntity' }
 export const F_MASS_CONST_SHARED_FRAGMENT: MassElementRef = { id: 'FMassConstSharedFragment', module: 'MassEntity' }
 export const U_MASS_TRANSLATOR: MassElementRef = { id: 'UMassTranslator', module: 'MassSpawner' }
 export const U_MASS_PROCESSOR: MassElementRef = { id: 'UMassProcessor', module: 'MassEntity' }
 export const U_MASS_ENTITY_TRAIT_BASE: MassElementRef = { id: 'UMassEntityTraitBase', module: 'MassSpawner' }
+export const F_OBJECT_WRAPPER_FRAGMENT: MassElementRef = { id: 'FObjectWrapperFragment', module: 'MassCommon' }
+export const F_MASS_CHUNK_FRAGMENT: MassElementRef = { id: 'FMassChunkFragment', module: 'MassEntity' }
 
-interface ModuleBuilder {
-    ref(id: string, moduleId?: string): MassElementRef;
-    frag(id: string, extra?: Partial<MassFragmentRef>): MassFragmentRef;
+export const M_MASS_COMMON = 'MassCommon';
+
+export const E_ALL_NET_MODES: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client'];
+export const E_ALL_WORLD_MODES: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client', 'EditorWorld'];
+export const E_ALL: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client', 'Editor', 'EditorWorld'];
+export const E_DEFAULT: MassProcessorExecutionFlag[] = ['Server', 'Standalone'];
+
+const EG_UpdateWorldFromMass = 'UE::Mass::ProcessorGroupNames::UpdateWorldFromMass';
+const EG_SyncWorldToMass = 'UE::Mass::ProcessorGroupNames::SyncWorldToMass';
+const EG_Behavior = 'UE::Mass::ProcessorGroupNames::Behavior';
+const EG_Tasks = 'UE::Mass::ProcessorGroupNames::Tasks';
+const EG_Avoidance = 'UE::Mass::ProcessorGroupNames::Avoidance';
+const EG_ApplyForces = 'UE::Mass::ProcessorGroupNames::ApplyForces';
+const EG_Movement = 'UE::Mass::ProcessorGroupNames::Movement';
+const EG_LODCollector = 'UE::Mass::ProcessorGroupNames::LODCollector';
+const EG_LOD = 'UE::Mass::ProcessorGroupNames::LOD';
+
+class RefBuilder implements MassElementRef {
+    constructor(public id: string, public module: string) {
+    }
+
+    remark?: string;
+
+    from(moduleId: string) {
+        this.module = moduleId;
+        return this;
+    }
+
+    withRemark(value: string) {
+        this.remark = value;
+        return this;
+    }
+
+    // Convert to ProcessingRequirementBuilder
+
+    noAccess() { return this.withAccess('None'); }
+    readOnly() { return this.withAccess('ReadOnly'); }
+    readWrite() { return this.withAccess('ReadWrite'); }
+
+    all() { return this.withPresence('All'); }
+    any() { return this.withPresence('Any'); }
+    none() { return this.withPresence('None'); }
+    optional() { return this.withPresence('Optional'); }
+
+    withAccess(value: 'None' | 'ReadOnly' | 'ReadWrite') {
+        return new ProcessingRequirementBuilder(this).withAccess(value);
+    }
+
+    withPresence(value: 'All' | 'Any' | 'None' | 'Optional') {
+        return new ProcessingRequirementBuilder(this).withPresence(value);
+    }
 }
+
+class ProcessingRequirementBuilder extends RefBuilder implements MassProcessingRequirement {
+    constructor(ref: MassElementRef) {
+        super(ref.id, ref.module);
+        this.access = 'None';
+        this.presence = 'All';
+        Object.assign(this, ref);
+    }
+
+    access?: 'None' | 'ReadOnly' | 'ReadWrite';
+    presence?: 'All' | 'Any' | 'None' | 'Optional';
+
+    override noAccess() { return this.withAccess('None'); }
+    override readOnly() { return this.withAccess('ReadOnly'); }
+    override readWrite() { return this.withAccess('ReadWrite'); }
+
+    override all() { return this.withPresence('All'); }
+    override any() { return this.withPresence('Any'); }
+    override none() { return this.withPresence('None'); }
+    override optional() { return this.withPresence('Optional'); }
+
+    override withAccess(value: 'None' | 'ReadOnly' | 'ReadWrite') {
+        this.access = value;
+        return this;
+    }
+
+    override withPresence(value: 'All' | 'Any' | 'None' | 'Optional') {
+        this.presence = value;
+        return this;
+    }
+}
+
+class ModuleBuilder {
+    constructor(private moduleId: string) {
+    }
+
+    r(id: string): RefBuilder {
+        return new RefBuilder(id, this.moduleId);
+    }
+
+    ref(id: string, extra?: Partial<MassElementRef>) {
+        return {
+            module: extra?.module || this.moduleId,
+            ...extra,
+            id
+        };
+    }
+
+    /**
+     * @deprecated use ref() instead
+     */
+    frag(id: string, extra?: Partial<MassFragmentRef>) {
+        return {
+            id,
+            module: this.moduleId,
+            ...(extra || {}),
+        };
+    }
+}
+
 function declareModule(moduleId: string, declarator: (module: ModuleBuilder) => Omit<MassModule, 'id'>) {
     return {
-        ...declarator({
-            ref: (id: string, otherModuleId?: string) => ({ module: otherModuleId || moduleId, id }),
-            frag: (id: string, extra?: Omit<MassFragmentRef, 'id'>) => ({
-                id,
-                module: moduleId,
-                ...(extra || {}),
-            })
-        }),
+        ...declarator(new ModuleBuilder(moduleId)),
         id: moduleId
     };
 }
@@ -40,7 +145,10 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     }
                 ],
                 fragments: [
-                    { id: 'FMassFragment', properties: [] },
+                    { id: 'FMassFragment', parent: null, properties: [] },
+                    { id: 'FMassSharedFragment', parent: null, properties: [] },
+                    { id: 'FMassConstSharedFragment', parent: null, properties: [] },
+                    { id: 'FMassChunkFragment', parent: null, properties: [] },
                     {
                         id: 'FMassDebugLogFragment',
                         properties: [
@@ -50,12 +158,23 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             }
                         ]
                     },
-                    { id: 'FMassConstSharedFragment', properties: [] }
                 ],
                 processors: [
-                    { id: 'UMassProcessor' },
-                    { id: 'UMassObserverProcessor' },
-                    { id: 'UMassCompositeProcessor' }
+                    {
+                        id: 'UMassProcessor',
+                        parent: null,
+                        queries: [],
+                    },
+                    {
+                        id: 'UMassObserverProcessor',
+                        parent: U_MASS_PROCESSOR,
+                        queries: [],
+                    },
+                    {
+                        id: 'UMassCompositeProcessor',
+                        parent: U_MASS_PROCESSOR,
+                        queries: [],
+                    }
                 ]
             })),
         ]
@@ -100,14 +219,118 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 traits: [
-                    { id: 'UMassCrowdMemberTrait' },
-                    { id: 'UMassCrowdServerRepresentationTrait' },
+                    {
+                        id: 'UMassCrowdMemberTrait',
+                        addsFragments: [
+                            m.frag('FMassCrowdLaneTrackingFragment')
+                        ],
+                        addsTags: [
+                            m.ref('FMassCrowdTag')
+                        ]
+                    },
+                    {
+                        id: 'UMassCrowdServerRepresentationTrait',
+                        properties: [
+                            {
+                                comment: `Actor class of this agent when spawned on server`,
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                name: 'TemplateActor',
+                                type: 'TSubclassOf<AActor>'
+                            },
+                            {
+                                comment: `Configuration parameters for the representation processor`,
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                name: 'Params',
+                                type: 'FMassRepresentationParameters'
+                            },
+                        ],
+                        requiredFragments: [
+                            m.frag('FMassViewerInfoFragment', { module: 'MassLOD' }),
+                            m.frag('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.frag('FMassActorFragment', { module: 'MassActors' }),
+                        ],
+                        addsFragments: [
+                            m.frag('FMassRepresentationSubsystemSharedFragment', {
+                                module: 'MassRepresentation',
+                                shared: true
+                            }),
+                            m.frag('FMassRepresentationParameters', {
+                                module: 'MassRepresentation',
+                                const: true,
+                                shared: true
+                            }),
+                            m.frag('FMassRepresentationFragment', {
+                                module: 'MassRepresentation',
+                            }),
+                            m.frag('FMassRepresentationLODFragment', {
+                                module: 'MassRepresentation',
+                            }),
+                            m.frag('FMassVisualizationChunkFragment', {
+                                module: 'MassLOD'
+                            })
+                        ]
+                    },
 
                 ],
                 processors: [
-                    { id: 'UMassCrowdDynamicObstacleProcessor' },
-                    { id: 'UMassCrowdServerRepresentationLODProcessor' },
-                    { id: 'UMassDebugCrowdVisualizationProcessor' },
+                    {
+                        id: 'UMassCrowdDynamicObstacleProcessor',
+                        queries: [
+                            {
+                                id: 'EntityQuery_Conditional',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassVelocityFragment').from('MassMovement').readOnly().optional(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassCrowdObstacleFragment').readWrite(),
+                                    m.r('FMassSimulationVariableTickFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').from('MassLOD').readOnly().optional(),
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassCrowdServerRepresentationLODProcessor',
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassViewerInfoFragment').from('MassLOD').readOnly(),
+                                    m.r('FMassRepresentationLODFragment').from('MassRepresentation').readWrite(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassCrowdTag').all()
+                                ],
+                            }
+                        ],
+                        requiresSubsystems: [
+                            m.r('UMassLODSubsystem').from('MassLOD').readOnly()
+                        ]
+                    },
+                    {
+                        id: 'UMassDebugCrowdVisualizationProcessor',
+                        requiresMutatingWorldAccess: true,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassCrowdTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassRepresentationFragment').from('MassRepresentation').readWrite(),
+                                    m.r('FMassActorFragment').from('MassActors').readWrite(),
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassCrowdLODCollectorProcessor',
+                        parent: m.r('UMassLODCollectorProcessor').from('MassLOD')
+                    }
                 ]
             }))
         ]
@@ -128,8 +351,40 @@ export const MASS_REFERENCE: MassPlugin[] = [
                         ]
                     },
                     {
+                        id: 'FMassActorFragment',
+                        parent: F_OBJECT_WRAPPER_FRAGMENT,
+                        properties: [
+                            {
+                                comment: `
+                                    made visible for debugging purposes. It will show up in Mass's gameplay
+                                    debugger category when viewing fragment details
+                                `,
+                                specifiers: ['VisibleAnywhere', 'Transient'],
+                                category: 'Mass',
+                                type: 'TWeakObjectPtr<AActor>',
+                                name: 'Actor'
+                            },
+                            {
+                                comment: `Ownership of the actor`,
+                                type: 'bool',
+                                name: 'bIsOwnedByMass',
+                                defaultValue: 'false'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'FCapsuleComponentWrapperFragment',
+                        parent: F_OBJECT_WRAPPER_FRAGMENT,
+                        properties: [
+                            {
+                                type: 'TWeakObjectPtr<UCapsuleComponent>',
+                                name: 'Component'
+                            }
+                        ]
+                    },
+                    {
                         id: 'FCharacterMovementComponentWrapperFragment',
-                        parent: m.ref('FObjectWrapperFragment', 'MassCommon'),
+                        parent: F_OBJECT_WRAPPER_FRAGMENT,
                         properties: [
                             {
                                 name: 'Component',
@@ -137,6 +392,14 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             }
                         ]
                     },
+                    {
+                        id: 'FMassSceneComponentWrapperFragment',
+                        parent: F_OBJECT_WRAPPER_FRAGMENT
+                    },
+                    {
+                        id: 'FDataFragment_BehaviorTreeComponentWrapper',
+                        poarent: F_OBJECT_WRAPPER_FRAGMENT
+                    }
                 ],
                 tags: [
                     declareTag('FMassCapsuleTransformCopyToMassTag'),
@@ -149,58 +412,319 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     declareTag('FMassSceneComponentLocationCopyToActorTag')
                 ],
                 traits: [
-                    { id: 'UMassAgentSyncTrait' },
+                    {
+                        id: 'UMassAgentSyncTrait',
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass',
+                                type: 'EMassTranslationDirection',
+                                name: 'SyncDirection',
+                                defaultValue: 'EMassTranslationDirection::BothWays'
+                            },
+                        ]
+                    },
+                    {
+                        id: 'UMassAgentCapsuleCollisionSyncTrait',
+                        parent: m.ref('UMassAgentSyncTrait'),
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass',
+                                type: 'bool',
+                                name: 'bSyncTransform',
+                                defaultValue: 'true'
+                            }
+                        ],
+                        addsFragments: [
+                            m.frag('FCapsuleComponentWrapperFragment'),
+                            m.frag('FAgentRadiusFragment', { module: M_MASS_COMMON }),
+                            m.frag('FTransformFragment', {
+                                module: M_MASS_COMMON,
+                                remark: `
+                                    Only added if bSyncTransform is true
+                                `
+                            }),
+                        ],
+                        addsTranslators: [
+                            m.ref('UMassCapsuleTransformToMassTranslator', {
+                                remark: `
+                                    When SyncDirection includes ActorToMass
+                                `
+                            }),
+                            m.ref('UMassTransformToActorCapsuleTranslator', {
+                                remark: `
+                                    When SyncDirection includes MassToActor
+                                `
+                            }),
+                        ]
+                    },
+                    {
+                        id: 'UMassAgentMovementSyncTrait',
+                        parent: m.ref('UMassAgentSyncTrait'),
+                        remark: unindent(
+                            `
+                            # Additional
+                            The agent actor must inherit from \`ACharacter\`
+                            `
+                        ),
+                        properties: [],
+                        addsFragments: [
+                            m.ref('FCharacterMovementComponentWrapperFragment'),
+                            m.ref('FMassVelocityFragment', { module: 'MassMovement' }),
+                        ],
+                        addsTranslators: [
+                            m.ref('UMassCharacterMovementToMassTranslator', {
+                                remark: `
+                                    Only when SyncDirection includes ActorToMass
+                                `
+                            }),
+                            m.ref('UMassCharacterMovementToActorTranslator', {
+                                remark: `
+                                    Only when SyncDirection includes MassToActor
+                                `
+                            })
+                        ]
+                    },
+                    {
+                        id: 'UMassAgentOrientationSyncTrait',
+                        parent: m.ref('UMassAgentSyncTrait'),
+                        requiredFragments: [
+                            m.frag('FCharacterMovementComponentWrapperFragment')
+                        ],
+                        addsTranslators: [
+                            m.ref('UMassCharacterOrientationToMassTranslator', {
+                                remark: `Only when SyncDirection includes ActorToMass`
+                            }),
+                            m.ref('UMassCharacterOrientationToActorTranslator', {
+                                remark: `Only when SyncDirection includes MassToActor`
+                            }),
+                        ]
+                    },
+                    {
+                        id: 'UMassAgentFeetLocationSyncTrait',
+                        parent: m.ref('UMassAgentSyncTrait'),
+                        addsFragments: [
+                            m.frag('FMassSceneComponentWrapperFragment'),
+                            m.frag('FTransformFragment', { module: M_MASS_COMMON }),
+                        ]
+                    },
                 ],
                 processors: [
                     {
                         id: 'UMassCharacterMovementToMassTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_SyncWorldToMass,
+                        requiresGameThread: true,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FCharacterMovementComponentWrapperFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite(),
+                                    m.r('FMassVelocityFragment').from('MassMovement').readWrite(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassCharacterMovementCopyToMassTag').all()
+                                ]
+                            }
+                        ]
                     },
                     {
                         id: 'UMassCharacterMovementToActorTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        requiresGameThread: true,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_UpdateWorldFromMass,
+                        executeAfter: [
+                            EG_Movement
+                        ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassCharacterMovementCopyToActorTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FCharacterMovementComponentWrapperFragment').readWrite(),
+                                    m.r('FMassVelocityFragment').from('MassMovement').readOnly()
+                                ]
+                            }
+                        ]
                     },
                     {
                         id: 'UMassCharacterOrientationToMassTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        requiresGameThread: true,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_SyncWorldToMass,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassCharacterOrientationCopyToMassTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FCharacterMovementComponentWrapperFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite()
+                                ]
+                            }
+                        ]
                     },
                     {
                         id: 'UMassCharacterOrientationToActorTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        requiresMutatingWorldAccess: true,
+                        requiresGameThread: true,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_UpdateWorldFromMass,
+                        executeAfter: [ EG_Movement ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassCharacterOrientationCopyToActorTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FCharacterMovementComponentWrapperFragment').readWrite(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                ]
+                            }
+                        ]
                     },
-
                     {
                         id: 'UMassCapsuleTransformToMassTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        requiresGameThread: true,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_SyncWorldToMass,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassCapsuleTransformCopyToMassTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FCapsuleComponentWrapperFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite(),
+                                ]
+                            }
+                        ]
                     },
                     {
                         id: 'UMassTransformToActorCapsuleTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        requiresGameThread: true,
+                        requiresMutatingWorldAccess: true,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_UpdateWorldFromMass,
+                        executeAfter: [ EG_Movement ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassCapsuleTransformCopyToActorTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FCapsuleComponentWrapperFragment').readWrite(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                ]
+                            }
+                        ]
                     },
                     {
                         id: 'UMassSceneComponentLocationToMassTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_SyncWorldToMass,
+                        requiresGameThread: true,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassSceneComponentLocationCopyToMassTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FMassSceneComponentWrapperFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite(),
+                                ]
+                            }
+                        ]
                     },
                     {
                         id: 'UMassSceneComponentLocationToActorTranslator',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_UpdateWorldFromMass,
+                        executeAfter: [ EG_Movement ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassSceneComponentLocationCopyToActorTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FMassSceneComponentWrapperFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite()
+                                ],
+                            }
+                        ],
+                        requiresMutatingWorldAccess: true
                     },
                     {
                         id: 'UMassTranslator_BehaviorTree',
-                        parent: U_MASS_TRANSLATOR
+                        parent: U_MASS_TRANSLATOR,
+                        autoRegisters: false,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FDataFragment_BehaviorTreeComponentWrapper').readWrite()
+                                ]
+                            }
+                        ]
                     }
                 ]
             })),
             declareModule('MassEQS', m => ({
                 processors: [
-                    { id: 'UMassEnvQueryProcessorBase', parent: U_MASS_PROCESSOR },
+                    {
+                        id: 'UMassEnvQueryProcessorBase',
+                        parent: U_MASS_PROCESSOR,
+                        queries: []
+                    },
                     {
                         id: 'UMassEnvQueryTestProcessor_MassEntityTags',
-                        parent: { id: 'UMassEnvQueryProcessorBase', module: 'MassEQS' }
+                        comment: `
+                            Processor for completing MassEQSSubsystem Requests sent from
+                            UMassEnvQueryTest_MassEntityTags
+                        `,
+                        displayName: 'Mass EQS Processor Base',
+                        parent: { id: 'UMassEnvQueryProcessorBase', module: 'MassEQS' },
+                        requiresSubsystems: [
+                            m.r('UMassEQSSubsystem').readWrite()
+                        ]
                     },
                     {
                         id: 'UMassEnvQueryGeneratorProcessor_MassEntityHandles',
-                        parent: { id: 'UMassEnvQueryProcessorBase', module: 'MassEQS' }
+                        parent: { id: 'UMassEnvQueryProcessorBase', module: 'MassEQS' },
+                        comment: `
+                            Processor for completing MassEQSSubsystem Requests sent from
+                            UMassEnvQueryGenerator_MassEntityHandles
+                        `,
+                        displayName: 'Mass Entity Handles Generator Processor',
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON)
+                                ],
+                            }
+                        ],
+                        requiresSubsystems: [
+                            m.r('UMassEQSSubsystem').readWrite()
+                        ]
                     }
                 ]
             })),
@@ -230,11 +754,83 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     }
                 ],
                 traits: [
-                    { id: 'UMassDebugVisualizationTrait' },
+                    {
+                        id: 'UMassDebugVisualizationTrait',
+                        properties: [
+                            {
+                                conditionals: ['WITH_EDITORONLY_DATA'],
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Spawn',
+                                type: 'FAgentDebugVisualization',
+                                name: 'DebugShape'
+                            }
+                        ],
+                        addsFragments: [
+                            m.frag('FSimDebugVisFragment', {
+                                remark: 'Only in editor builds (WITH_EDITORONLY_DATA)'
+                            }),
+                            m.frag('FDataFragment_DebugVis', {
+                                remark: `Will use editor-only shape 'WireShape' in editor builds`
+                            }),
+                            m.frag('FAgentRadiusFragment', { module: M_MASS_COMMON }),
+                            m.frag('FTransformFragment', { module: M_MASS_COMMON }),
+                        ],
+                        addsTags: [
+                            m.ref('FMassDebuggableTag', {
+                                remark: 'Except in shipping and test builds'
+                            })
+                        ]
+                    },
                 ],
                 processors: [
-                    { id: 'UDebugVisLocationProcessor' },
-                    { id: 'UMassProcessor_UpdateDebugVis' },
+                    {
+                        id: 'UDebugVisLocationProcessor',
+                        executeAfter: [ EG_SyncWorldToMass ],
+                        requiresGameThread: true,
+                        queryBasedPruning: 'Never',
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FSimDebugVisFragment').readOnly(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassDebuggableTag').all()
+                                ],
+                            },
+                            {
+                                id: 'AllLocationEntitiesQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly()
+                                ]
+                            }
+                        ],
+                        requiresSubsystems: [
+                            m.r('UMassDebuggerSubsystem').readWrite()
+                        ]
+                    },
+                    {
+                        id: 'UMassProcessor_UpdateDebugVis',
+                        executeAfter: [ EG_UpdateWorldFromMass ],
+                        requiresGameThread: true,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FDataFragment_DebugVis').readWrite(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readWrite()
+                                ],
+                                requiresTags: [
+                                    m.r('FMassDebuggableTag').all()
+                                ],
+                            }
+                        ],
+                        requiresSubsystems: [
+                            m.r('UMassDebuggerSubsystem')
+                        ]
+                    },
                 ]
             })),
             declareModule('MassLOD', m => ({
@@ -363,17 +959,400 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                 defaultValue: 'false'
                             }
                         ]
+                    },
+                    {
+                        id: 'FMassVisualizationChunkFragment',
+                        parent: F_MASS_CHUNK_FRAGMENT,
+                        properties: [
+                            {
+                                comment: `
+                                    Visibility of the current chunk, should never change
+                                `,
+                                specifiers: [],
+                                type: 'EMassVisibility',
+                                name: 'Visibility',
+                                defaultValue: 'EMassVisibility::Max'
+                            },
+                            {
+                                comment: `
+                                    Not visible chunks, might contains entity that are newly visible and not yet moved.
+                                `,
+                                specifiers: [],
+                                type: 'bool',
+                                name: 'bContainsNewlyVisibleEntity',
+                                defaultValue: 'true'
+                            },
+                            {
+                                comment: `
+                                    Not visible chunks delta time until next update
+                                `,
+                                specifiers: [],
+                                type: 'float',
+                                name: 'DeltaTime',
+                                defaultValue: '0'
+                            },
+                        ]
+                    },
+                    {
+                        id: 'FMassSimulationLODSharedFragment',
+                        parent: F_MASS_SHARED_FRAGMENT
+                    },
+                    {
+                        id: 'FMassVariableTickChunkFragment',
+                        parent: F_MASS_CHUNK_FRAGMENT
+                    },
+                    {
+                        id: 'FMassSimulationVariableTickChunkFragment',
+                        parent: m.ref('FMassVariableTickChunkFragment')
+                    },
+                    {
+                        id: 'FMassSimulationVariableTickSharedFragment',
+                        parent: F_MASS_SHARED_FRAGMENT
                     }
                 ],
                 traits: [
-                    { id: 'UMassLODCollectorTrait' },
-                    { id: 'UMassDistanceLODCollectorTrait' },
-                    { id: 'UMassSimulationLODTrait' },
+                    {
+                        id: 'UMassLODCollectorTrait',
+                        properties: [
+                            {
+                                comment: `
+                                    Whether we should verify that the LOD collector processor associated with this
+                                    trait is enabled by default
+                                `,
+                                specifiers: ['EditAnywhere', 'config'],
+                                metaSpecifiers: {
+                                    AdvancedDisplay: ''
+                                },
+                                category: 'LOD',
+                                type: 'bool',
+                                name: 'bTestCollectorProcessor',
+                                defaultValue: 'true'
+                            },
+                        ],
+                        addsFragments: [
+                            m.ref('FMassViewerInfoFragment'),
+                        ],
+                        addsTags: [
+                            m.ref('FMassCollectLODViewerInfoTag')
+                        ],
+                        requiredFragments: [
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON })
+                        ],
+                        requiredProcessors: [
+                            m.ref('UMassLODCollectorProcessor', {
+                                remark: `
+                                    Only when bTestCollectorProcessor is enabled
+                                `
+                            })
+                        ]
+                    },
+                    {
+                        id: 'UMassDistanceLODCollectorTrait',
+                        properties: [
+                            {
+                                comment: `
+                                    Whether we should verify that the LOD collector processor associated with this
+                                    trait is enabled by default
+                                `,
+                                specifiers: ['EditAnywhere', 'config'],
+                                metaSpecifiers: {
+                                    AdvancedDisplay: ''
+                                },
+                                category: 'LOD',
+                                type: 'bool',
+                                name: 'bTestCollectorProcessor',
+                                defaultValue: 'true'
+                            },
+                        ],
+                        addsFragments: [
+                            m.ref('FMassViewerInfoFragment'),
+                        ],
+                        addsTags: [
+                            m.ref('FMassCollectLODViewerInfoTag')
+                        ],
+                        requiredFragments: [
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON })
+                        ],
+                        requiredProcessors: [
+                            m.ref('UMassLODDistanceCollectorProcessor', {
+                                remark: `
+                                    Only when bTestCollectorProcessor is enabled
+                                `
+                            })
+                        ]
+                    },
+                    {
+                        id: 'UMassSimulationLODTrait',
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Config',
+                                type: 'FMassSimulationLODParameters',
+                                name: 'Params'
+                            },
+
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Config',
+                                type: 'bool',
+                                name: 'bEnableVariableTicking',
+                                defaultValue: 'false'
+                            },
+
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Config',
+                                type: 'FMassSimulationVariableTickParameters',
+                                name: 'VariableTickParams',
+                                metaSpecifiers: {
+                                    EditCondition: "bEnableVariableTicking",
+                                    EditConditionHides: ''
+                                }
+                            },
+                        ],
+                        requiredFragments: [
+                            m.ref('FMassViewerInfoFragment'),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON })
+                        ],
+                        addsFragments: [
+                            m.ref('FMassSimulationLODFragment'),
+                            m.ref('FMassSimulationLODParameters'),
+                            m.ref('FMassSimulationLODSharedFragment'),
+                            m.ref('FMassSimulationVariableTickFragment', {
+                                remark: `
+                                    Only when bEnableVariableTicking
+                                `
+                            }),
+                            m.ref('FMassSimulationVariableTickChunkFragment', {
+                                remark: `
+                                    Only when bEnableVariableTicking
+                                `
+                            }),
+                            m.ref('FMassSimulationVariableTickParameters', {
+                                remark: `
+                                    Only when bEnableVariableTicking
+                                `
+                            }),
+                            m.ref('FMassSimulationVariableTickSharedFragment', {
+                                remark: `
+                                    Only when bEnableVariableTicking
+                                `
+                            })
+                        ],
+                        addsTags: [
+                            m.ref('FMassOffLODTag', {
+                                remark: `Only if Params.bSetLODTags or bEnableVariableTicking is set`
+                            })
+                        ]
+                    },
                 ],
                 processors: [
-                    { id: 'UMassLODCollectorProcessor' },
-                    { id: 'UMassLODDistanceCollectorProcessor' },
-                    { id: 'UMassSimulationLODProcessor' }
+                    {
+                        id: 'UMassLODCollectorProcessor',
+                        parent: U_MASS_PROCESSOR,
+                        comment: `
+                            LOD collector which combines collection of LOD information for both Viewer and Simulation
+                            LODing when possible.
+                        `,
+                        displayName: 'LOD Collector',
+                        autoRegisters: false,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_LODCollector,
+                        executeAfter: [ EG_SyncWorldToMass ],
+                        requiresSubsystems: [ m.r('UMassLODSubsystem').readOnly() ],
+                        queries: [
+                            {
+                                id: 'BaseQuery',
+                                remark: unindent(
+                                    `
+                                    All other queries are based on this query.
+                                    `
+                                ),
+                                requiresTags: [
+                                    m.r('FMassCollectLODViewerInfoTag').all()
+                                ],
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassViewerInfoFragment').readWrite(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').readOnly().optional(),
+                                    m.r('FMassVisualizationChunkFragment').readOnly().optional(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_VisibleRangeAndOnLOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are in visible range and are On LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').none(),
+                                    m.r('FMassOffLODTag').none()
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_VisibleRangeOnly',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are in visible range but are Off LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').none(),
+                                    m.r('FMassOffLODTag').all()
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_OnLODOnly',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are NOT in visible range but are On LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').all(),
+                                    m.r('FMassOffLODTag').none()
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_NotVisibleRangeAndOffLOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                comment: `
+                                    All entities that are Not in visible range and are at Off LOD
+                                `,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').all(),
+                                    m.r('FMassOffLODTag').all()
+                                ]
+                            },
+                        ]
+                    },
+                    {
+                        id: 'UMassLODDistanceCollectorProcessor',
+                        parent: U_MASS_PROCESSOR,
+                        comment: `
+                            LOD Distance collector which combines collection of LOD information for both Viewer and
+                            Simulation LODing. This collector cares only about the entities' distance to LOD viewer
+                            location, nothing else. Matches MassDistanceLODProcessor logic which uses the same
+                            Calculator LODLogic
+                        `,
+                        displayName: 'LOD Distance Collector',
+                        requiresSubsystems: [m.r('UMassLODSubsystem')],
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_LODCollector,
+                        executeAfter: [EG_SyncWorldToMass],
+                        queries: [
+                            {
+                                id: 'BaseQuery',
+                                remark: unindent(
+                                    `
+                                    All other queries are based on this query.
+                                    `
+                                ),
+                                requiresTags: [
+                                    m.r('FMassCollectDistanceLODViewerInfoTag'),
+                                ],
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON),
+                                    m.r('FMassViewerInfoFragment'),
+                                    m.r('FMassSimulationVariableTickChunkFragment'),
+                                    m.r('FMassVisualizationChunkFragment'),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_RelevantRangeAndOnLOD',
+                                comment: 'All entities that are in relevant range and are On LOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').none(),
+                                    m.r('FMassOffLODTag').none()
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_RelevantRangeOnly',
+                                comment: 'All entities that are in relevant range but are Off LOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').none(),
+                                    m.r('FMassOffLODTag').all(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_OnLODOnly',
+                                comment: 'All entities that are NOT in relevant range but are On LOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').all(),
+                                    m.r('FMassOffLODTag').none(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery_NotRelevantRangeAndOffLOD',
+                                comment: 'All entities that are Not in relevant range and are at Off LOD',
+                                remark: `(Includes the requirements of BaseQuery)`,
+                                requiresTags: [
+                                    m.r('FMassVisibilityCulledByDistanceTag').all(),
+                                    m.r('FMassOffLODTag').all(),
+                                ]
+                            },
+                        ]
+                    },
+                    {
+                        id: 'UMassSimulationLODProcessor',
+                        displayName: 'Simulation LOD',
+                        parent: U_MASS_PROCESSOR,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_LOD,
+                        executeAfter: [EG_LODCollector],
+                        requiresSubsystems: [m.r('UMassLODSubsystem').readOnly(),],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassViewerInfoFragment').readOnly(),
+                                    m.r('FMassSimulationLODFragment').readWrite(),
+                                    m.r('FMassSimulationLODParameters'),
+                                    m.r('FMassSimulationLODSharedFragment').readWrite(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').readOnly().optional(),
+                                    m.r('FMassSimulationVariableTickSharedFragment').readOnly().optional(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQueryCalculateLOD',
+                                remark: unindent(
+                                    `
+                                    Same requirements as EntityQuery, with a chunk filter looking for chunks that need
+                                    LOD calculated.
+                                    `
+                                ),
+                            },
+                            {
+                                id: 'EntityQueryAdjustDistances',
+                                remark: unindent(
+                                    `
+                                    Same requirements as EntityQuery, with a chunk filter looking for chunks that need
+                                    distances to be adjusted.
+                                    `
+                                ),
+                            },
+                            {
+                                id: 'EntityQueryVariableTick',
+                                requiresFragments: [
+                                    m.r('FMassSimulationLODFragment'),
+                                    m.r('FMassSimulationVariableTickFragment'),
+                                    m.r('FMassSimulationVariableTickParameters'),
+                                    m.r('FMassSimulationVariableTickChunkFragment'),
+                                    m.r('FMassSimulationVariableTickSharedFragment'),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuerySetLODTag',
+                                requiresFragments: [
+                                    m.r('FMassSimulationLODFragment'),
+                                    m.r('FMassSimulationVariableTickFragment'),
+                                    m.r('FMassSimulationLODParameters'),
+                                ]
+                            },
+                        ]
+                    }
                 ]
             })),
             declareModule('MassMovement', m => ({
@@ -501,14 +1480,167 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 traits: [
-                    { id: 'UMassSimpleMovementTrait' },
-                    { id: 'UMassVelocityRandomizerTrait' },
-                    { id: 'UMassMovementTrait' },
+                    {
+                        id: 'UMassSimpleMovementTrait',
+                        properties: [],
+                        addsFragments: [
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FMassVelocityFragment', { module: 'MassMovement' })
+                        ],
+                        addsTags: [
+                            m.ref('FMassSimpleMovementTag')
+                        ]
+                    },
+                    {
+                        id: 'UMassVelocityRandomizerTrait',
+                        addsFragments: [
+                            m.ref('FMassVelocityFragment', {
+                                remark: unindent(
+                                    `
+                                    Initialized to X=MinSpeed, Y=MaxSpeed and Z=1 (if bSetZComponent, otherwise set to
+                                    0). This is a hack to support sending these parameters to initializer.
+                                    `
+                                )
+                            })
+                        ],
+                        properties: [
+                            {
+                                comment: `
+                                    The speed is expressed in UnrealUnits per second, which usually translates to
+                                    0.01m/s
+                                `,
+                                specifiers: ['EditAnywhere'],
+                                category: 'Velocity',
+                                metaSpecifiers: {
+                                    UIMin: '0.0',
+                                    ClampMin: '0.0'
+                                },
+                                type: 'float',
+                                name: 'MinSpeed',
+                                defaultValue: '0.f'
+                            },
+                            {
+                                comment: `
+                                    The speed is expressed in UnrealUnits per second, which usually translates to
+                                    0.01m/s
+                                `,
+                                specifiers: ['EditAnywhere'],
+                                category: 'Velocity',
+                                metaSpecifiers: {
+                                    UIMin: '1.0',
+                                    ClampMin: '1.0'
+                                },
+                                type: 'float',
+                                name: 'MaxSpeed',
+                                defaultValue: '200.f'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Velocity',
+                                type: 'bool',
+                                name: 'bSetZComponent',
+                                defaultValue: 'false'
+                            },
+                        ]
+                    },
+                    {
+                        id: 'UMassMovementTrait',
+                        requiredFragments: [
+                            m.ref('FAgentRadiusFragment', { module: M_MASS_COMMON }),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassVelocityFragment'),
+                            m.ref('FMassForceFragment'),
+                            m.ref('FMassDesiredMovementFragment'),
+                            m.ref('FMassMovementParameters'),
+                        ],
+                        addsTags: [
+                            m.ref('FMassCodeDrivenMovementTag', {
+                                remark: unindent(
+                                    `
+                                    Only when Movement.bIsCodeDrivenMovement is true
+                                    `
+                                )
+                            })
+                        ],
+                        properties: [
+                            {
+                                category: 'Movement',
+                                specifiers: ['EditAnywhere'],
+                                type: 'FMassMovementParameters',
+                                name: 'Movement'
+                            },
+                        ]
+                    },
                 ],
                 processors: [
-                    { id: 'UMassSimpleMovementProcessor' },
-                    { id: 'UMassApplyForceProcessor' },
-                    { id: 'UMassApplyMovementProcessor' }
+                    {
+                        id: 'UMassSimpleMovementProcessor',
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Avoidance,
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassVelocityFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite(),
+                                    m.r('FMassSimulationVariableTickFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').from('MassLOD').readOnly().optional(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassSimpleMovementTag').all()
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassApplyForceProcessor',
+                        comment: `
+                            Calculate desired movement based on input forces
+                        `,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_ApplyForces,
+                        executeAfter: [ EG_Avoidance ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassDesiredMovementFragment').readWrite(),
+                                    m.r('FMassForceFragment').readWrite(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none()
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassApplyMovementProcessor',
+                        parent: U_MASS_PROCESSOR,
+                        comment: `
+                            Updates entities position based on desired velocity.
+                            Only required for agents that have code driven displacement
+                            Not applied on Off-LOD entities.
+                        `,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Movement,
+                        executeAfter: [ EG_ApplyForces ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassVelocityFragment').readWrite(),
+                                    m.r('FTransformFragment').readWrite(),
+                                    m.r('FMassDesiredMovementFragment').readOnly(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').none(),
+                                    m.r('FMassCodeDrivenMovementTag').all()
+                                ]
+                            }
+                        ]
+                    }
                 ]
             })),
             declareModule('MassReplication', m => ({
@@ -623,14 +1755,169 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                 name: 'ReplicatorClass'
                             },
                         ]
+                    },
+                    {
+                        id: 'FMassReplicationSharedFragment',
+                        parent: F_MASS_SHARED_FRAGMENT
                     }
                 ],
                 traits: [
-                    { id: 'UMassReplicationTrait' },
+                    {
+                        id: 'UMassReplicationTrait',
+                        remark: unindent(
+                            `
+                            # Additional Requirements
+                            Has no effect on Standalone (local multiplayer) worlds.
+                            `
+                        ),
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Replication',
+                                type: 'FMassReplicationParameters',
+                                name: 'Params'
+                            },
+                        ],
+                        addsFragments: [
+                            m.ref('FReplicationTemplateIDFragment', { module: 'MassSpawner' }),
+                            m.ref('FMassNetworkIDFragment'),
+                            m.ref('FMassReplicatedAgentFragment'),
+                            m.ref('FMassReplicationViewerInfoFragment'),
+                            m.ref('FMassReplicationLODFragment'),
+                            m.ref('FMassReplicationGridCellLocationFragment'),
+                            m.ref('FMassReplicationParameters'),
+                            m.ref('FMassReplicationSharedFragment')
+                        ]
+                    },
                 ],
                 processors: [
-                    { id: 'UMassReplicationGridProcessor' },
-                    { id: 'UMassReplicationProcessor' }
+                    {
+                        id: 'UMassReplicationGridProcessor',
+                        comment: `
+                            Processor to update entity in the replication grid used to fetch entities close to
+                            clients
+                        `,
+                        remark: unindent(
+                            `
+                            <br/>
+
+                            > [!WARNING]
+                            > The query setup for this processor is a bit complicated, I may have made mistakes in
+                            > the queries below.
+
+                            <br/>
+                            `
+                        ),
+                        executionFlags: [ 'Server' ], // TODO: This is conditionally compiled
+                        processingPhase: 'PostPhysics',
+                        queries: [
+                            {
+                                id: 'AddToGridEntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassReplicationGridCellLocationFragment').readWrite(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readOnly()
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                    m.r('FMassInReplicationGridTag').none(),
+                                ],
+                                requiresSubsystems: [
+                                    m.r('UMassReplicationSubsystem').readWrite()
+                                ]
+                            },
+                            {
+                                id: 'RemoveFromGridEntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassReplicationGridCellLocationFragment').readWrite(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').none(),
+                                    m.r('FMassInReplicationGridTag').all()
+                                ],
+                                requiresSubsystems: [
+                                    m.r('UMassReplicationSubsystem').readWrite()
+                                ]
+                            },
+                            {
+                                id: 'UpdateGridEntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassReplicationGridCellLocationFragment').readWrite(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readOnly()
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                    m.r('FMassInReplicationGridTag').all(),
+                                ],
+                                requiresSubsystems: [
+                                    m.r('UMassReplicationSubsystem').readWrite()
+                                ]
+                            }
+                        ]
+
+                    },
+                    {
+                        id: 'UMassReplicationProcessor',
+                        comment: `
+                            Base processor that handles replication and only runs on the server. You should derive from
+                            this per entity type (that require different replication processing). It and its derived
+                            classes query Mass entity fragments and set those values for replication when appropriate,
+                            using the MassClientBubbleHandler.
+                        `,
+                        executionFlags: ['Server'], // TODO: conditional
+                        processingPhase: 'PostPhysics',
+                        requiresGameThread: true,
+                        requiresSubsystems: [
+                            m.r('UMassLODSubsystem').readOnly(),
+                        ],
+                        queries: [
+                            {
+                                id: 'SyncClientData',
+                                requiresFragments: [
+                                    m.r('FMassReplicationLODFragment').readWrite(),
+                                    m.r('FMassReplicatedAgentFragment').readWrite(),
+                                ]
+                            },
+                            {
+                                id: 'CollectorViewerInfoQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassReplicationViewerInfoFragment').readWrite(),
+                                    m.r('FMassReplicationSharedFragment').readWrite(),
+                                ]
+                            },
+                            {
+                                id: 'CalculateLODQuery',
+                                requiresFragments: [
+                                    m.r('FMassReplicationViewerInfoFragment').readOnly(),
+                                    m.r('FMassReplicationLODFragment').readWrite(),
+                                    m.r('FMassReplicationParameters'),
+                                    m.r('FMassReplicationSharedFragment').readWrite(),
+                                ]
+                            },
+                            {
+                                id: 'AdjustLODDistancesQuery',
+                                requiresFragments: [
+                                    m.r('FMassReplicationViewerInfoFragment').readOnly(),
+                                    m.r('FMassReplicationLODFragment').readWrite(),
+                                    m.r('FMassReplicationSharedFragment').readWrite(),
+                                ]
+                            },
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassNetworkIDFragment').readOnly(),
+                                    m.r('FReplicationTemplateIDFragment').readOnly(),
+                                    m.r('FMassReplicationLODFragment').readWrite(),
+                                    m.r('FMassReplicatedAgentFragment').readWrite(),
+                                    m.r('FMassReplicationParameters'),
+                                    m.r('FMassReplicationSharedFragment').readWrite(),
+                                ]
+                            }
+                        ]
+                    }
                 ]
             })),
             declareModule('MassRepresentation', m => ({
@@ -825,6 +2112,18 @@ export const MASS_REFERENCE: MassPlugin[] = [
                         ]
                     },
                     {
+                        id: 'FMassRepresentationSubsystemSharedFragment',
+                        parent: F_MASS_SHARED_FRAGMENT,
+                        properties: [
+                            {
+                                specifiers: ['Transient'],
+                                type: 'TObjectPtr<UMassRepresentationSubsystem>',
+                                name: 'RepresentationSubsystem',
+                                defaultValue: 'nullptr'
+                            }
+                        ]
+                    },
+                    {
                         id: 'FMassVisualizationLODParameters',
                         parent: F_MASS_CONST_SHARED_FRAGMENT,
                         properties: [
@@ -945,11 +2244,255 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                 defaultValue: 'nullptr'
                             },
                         ]
-                    }
+                    },
+                    { id: 'FMassDistanceLODSharedFragment', parent: F_MASS_SHARED_FRAGMENT },
                 ],
                 traits: [
-                    { id: 'UMassDistanceVisualizationTrait' },
-                    { id: 'UMassVisualizationTrait' },
+                    {
+                        id: 'UMassDistanceVisualizationTrait',
+                        remark: unindent(
+                            `
+                            # Additional Requirements
+                            Only applies to DedicatedServer worlds if bAllowServerSideVisualization is set.
+                            `
+                        ),
+                        requiredFragments: [
+                            m.ref('FMassViewerInfoFragment', { module: 'MassLOD' }),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FMassActorFragment', { module: 'MassActors' }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassRepresentationSubsystemSharedFragment'),
+                            m.ref('FMassRepresentationParameters'),
+                            m.ref('FMassRepresentationFragment'),
+                            m.ref('FMassDistanceLODParameters'),
+                            m.ref('FMassDistanceLODSharedFragment'),
+                            m.ref('FMassRepresentationLODFragment'),
+                            m.ref('FMassVisualizationChunkFragment', { module: 'MassLOD' })
+                        ],
+                        addsTags: [
+                            m.ref('FMassVisibilityCulledByDistanceTag'),
+                            m.ref('FMassDistanceLODProcessorTag'),
+                            m.ref('FMassVisualizationProcessorTag'),
+                        ],
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                comment: `
+                                    Instanced static mesh information for this agent
+                                `,
+                                type: 'FStaticMeshInstanceVisualizationDesc',
+                                name: 'StaticMeshInstanceDesc',
+                                mutable: true
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                comment: `
+                                    Actor class of this agent when spawned in high resolutio
+                                `,
+                                type: 'TSubclassOf<AActor>',
+                                name: 'HighResTemplateActor'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                comment: `
+                                    Actor class of this agent when spawned in low resolutio
+                                `,
+                                type: 'TSubclassOf<AActor>',
+                                name: 'LowResTemplateActor'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                metaSpecifiers: {
+                                    EditCondition: "bCanModifyRepresentationSubsystemClass"
+                                },
+                                category: 'Mass|Visual',
+                                comment: `
+                                    Allow subclasses to override the representation subsystem to use
+                                `,
+                                type: 'TSubclassOf<UMassRepresentationSubsystem>',
+                                name: 'RepresentationSubsystemClass'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                comment: `
+                                    Configuration parameters for the representation processor
+                                `,
+                                type: 'FMassRepresentationParameters',
+                                name: 'Params'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                comment: `
+                                    Configuration parameters for the Distance LOD processor
+                                `,
+                                type: 'FMassDistanceLODParameters',
+                                name: 'LODParams'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                comment: `
+                                    If set to true will result in the visualization-related fragments being added to
+                                    server-size entities as well. By default only the clients require visualization
+                                    fragments
+                                `,
+                                type: 'bool',
+                                name: 'bAllowServerSideVisualization',
+                                defaultValue: 'false'
+                            },
+                            {
+                                conditionals: ['WITH_EDITORONLY_DATA'],
+                                comment: `the property is marked like this to ensure it won't show up in UI`,
+                                specifiers: ['EditDefaultsOnly'],
+                                category: 'Mass|Visual',
+                                type: 'bool',
+                                name: 'bCanModifyRepresentationSubsystemClass',
+                                defaultValue: 'true'
+                            },
+                            {
+                                visibility: 'protected',
+                                comment: `
+                                    Controls whether StaticMeshInstanceDesc gets registered via FindOrAddStaticMeshDesc
+                                    call. Setting it to \`false\` can be useful for subclasses to avoid needlessly
+                                    creating visualization data in RepresentationSubsystem, data that will never be
+                                    used.
+                                `,
+                                type: 'bool',
+                                name: 'bRegisterStaticMeshDesc',
+                                defaultValue: 'true'
+                            },
+                        ]
+                    },
+                    {
+                        id: 'UMassVisualizationTrait',
+                        remark: unindent(
+                            `
+                            # Additional Requirements
+                            Only applies to DedicatedServer worlds if bAllowServerSideVisualization is set.
+
+                            # Validation
+
+                            It is a validation error to set any LOD to StaticMesh when the StaticMeshInstanceDesc does
+                            not point to a valid static mesh asset. In the event this happens, the parameters will be
+                            adjusted to use LOD level None instead.
+                            `
+                        ),
+                        requiredFragments: [
+                            m.ref('FMassViewerInfoFragment', { module: 'MassLOD' }),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FMassActorFragment', { module: 'MassActors' }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassRepresentationSubsystemSharedFragment'),
+                            m.ref('FMassRepresentationFragment'),
+                            m.ref('FMassRepresentationParameters'),
+                            m.ref('FMassVisualizationLODParameters'),
+                            m.ref('FMassRepresentationLODFragment'),
+                        ],
+                        addsTags: [
+                            m.ref('FMassVisibilityCulledByDistanceTag'),
+                            m.ref('FMassVisualizationLODProcessorTag'),
+                            m.ref('FMassVisualizationProcessorTag')
+                        ],
+                        properties: [
+                            {
+                                comment: `
+                                    Instanced static mesh information for this agent
+                                `,
+                                category: 'Mass|Visual',
+                                specifiers: ['EditAnywhere'],
+                                type: 'FStaticMeshInstanceVisualizationDesc',
+                                name: 'StaticMeshInstanceDesc',
+                                mutable: true
+                            },
+                            {
+                                comment: `
+                                    Actor class of this agent when spawned in high resolution
+                                `,
+                                category: 'Mass|Visual',
+                                specifiers: ['EditAnywhere'],
+                                type: 'TSubclassOf<AActor>',
+                                name: 'HighResTemplateActor'
+                            },
+                            {
+                                comment: `
+                                    Actor class of this agent when spawned in low resolution
+                                `,
+                                category: 'Mass|Visual',
+                                specifiers: ['EditAnywhere'],
+                                type: 'TSubclassOf<AActor>',
+                                name: 'LowResTemplateActor'
+                            },
+                            {
+                                comment: `
+                                    Allow subclasses to override the representation subsystem to use
+                                `,
+                                category: 'Mass|Visual',
+                                specifiers: ['EditAnywhere'],
+                                metaSpecifiers: {
+                                    EditCondition: "bCanModifyRepresentationSubsystemClass"
+                                },
+                                type: 'TSubclassOf<UMassRepresentationSubsystem>',
+                                name: 'RepresentationSubsystemClass'
+                            },
+                            {
+                                comment: `
+                                    Configuration parameters for the representation processor
+                                `,
+                                category: 'Mass|Visual',
+                                specifiers: ['EditAnywhere'],
+                                type: 'FMassRepresentationParameters',
+                                name: 'Params'
+                            },
+                            {
+                                comment: `
+                                    Configuration parameters for the visualization LOD processor
+                                `,
+                                category: 'Mass|Visual',
+                                specifiers: ['EditAnywhere'],
+                                type: 'FMassVisualizationLODParameters',
+                                name: 'LODParams'
+                            },
+                            {
+                                comment: `
+                                    If set to true will result in the visualization-related fragments being added to server-size entities as well.
+                                    By default only the clients require visualization fragments
+                                `,
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass|Visual',
+                                type: 'bool',
+                                name: 'bAllowServerSideVisualization',
+                                defaultValue: 'false'
+                            },
+                            {
+                                conditionals: ['WITH_EDITORONLY_DATA'],
+                                comment: `the property is marked like this to ensure it won't show up in UI`,
+                                specifiers: ['EditDefaultsOnly'],
+                                category: 'Mass|Visual',
+                                type: 'bool',
+                                name: 'bCanModifyRepresentationSubsystemClass',
+                                defaultValue: 'true'
+                            },
+                            {
+                                visibility: 'protected',
+                                comment: `
+                                    Controls whether StaticMeshInstanceDesc gets registered via FindOrAddStaticMeshDesc
+                                    call. Setting it to \`false\` can be useful for subclasses to avoid needlessly
+                                    creating visualization data in RepresentationSubsystem, data that will never be
+                                    used.
+                                `,
+                                type: 'bool',
+                                name: 'bRegisterStaticMeshDesc',
+                                defaultValue: 'true'
+                            },
+                        ]
+                    },
                 ],
                 processors: [
                     { id: 'UMassDistanceLODProcessor' },
@@ -1094,14 +2637,28 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 traits: [
-                    { id: 'UMassSmartObjectUserTrait' },
+                    {
+                        id: 'UMassSmartObjectUserTrait',
+                        properties: [
+                            {
+                                comment: `Tags describing the SmartObject user. Used when searching smart objects.`,
+                                specifiers: ['EditAnywhere'],
+                                category: 'Parameter',
+                                type: 'FGameplayTagContainer',
+                                name: 'UserTags'
+                            }
+                        ],
+                        addsFragments: [
+                            m.ref('FMassSmartObjectUserFragment')
+                        ]
+                    },
                 ],
                 processors: [
                     { id: 'UMassSmartObjectCandidatesFinderProcessor' },
                     { id: 'UMassSmartObjectTimedBehaviorProcessor' }
                 ]
             })),
-            declareModule('MassCommon', m => ({
+            declareModule(M_MASS_COMMON, m => ({
                 fragments: [
                     {
                         id: 'FTransformFragment',
@@ -1131,13 +2688,42 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 traits: [
-                    { id: 'UMassAssortedFragmentsTrait' },
+                    {
+                        id: 'UMassAssortedFragmentsTrait',
+                        remark: unindent(
+                            `
+                            Adds whatever Fragments and/or Tags you wish to add.
+                            `
+                        ),
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass',
+                                metaSpecifiers: {
+                                    BaseStruct: '/Script/MassEntity.MassFragment',
+                                    ExcludeBaseStruct: ''
+                                },
+                                type: 'TArray<FInstancedStruct>',
+                                name: 'Fragments'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: 'Mass',
+                                metaSpecifiers: {
+                                    BaseStruct: '/Script/MassEntity.MassTag',
+                                    ExcludeBaseStruct: ''
+                                },
+                                type: 'TArray<FInstancedStruct>',
+                                name: 'Tags'
+                            },
+                        ]
+                    },
                 ],
                 processors: [
                     { id: 'UMassSpawnLocationProcessor' },
                     {
                         id: 'UMassTranslator',
-                        parent: m.ref('UMassProcessor', 'MassEntity')
+                        parent: m.ref('UMassProcessor', { module: 'MassEntity' })
                     }
                 ]
             })),
@@ -1194,7 +2780,7 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                 specifiers: ['Transient'],
                                 type: 'FMassLookAtPriority',
                                 name: 'Priority',
-                                defaultValue: '{static_cast<uint8>(EMassLookAtPriorities::LowestPriority)}'
+                                defaultValue: 'EMassLookAtPriorities::LowestPriority'
                             },
                             {
                                 specifiers: ['Transient'],
@@ -1237,7 +2823,7 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                 specifiers: ['Transient'],
                                 type: 'FMassLookAtPriority',
                                 name: 'Priority',
-                                defaultValue: '{static_cast<uint8>(EMassLookAtPriorities::LowestPriority)}'
+                                defaultValue: 'EMassLookAtPriorities::LowestPriority'
                             },
                             {
                                 type: 'UE::Mass::LookAt::FTargetHashGrid2D::FCellLocation',
@@ -1309,12 +2895,90 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             }
                         ]
                     },
+                    {
+                        id: 'FMassZoneGraphAnnotationVariableTickChunkFragment',
+                        parent: F_MASS_CHUNK_FRAGMENT
+                    }
                 ],
                 traits: [
-                    { id: 'UMassLookAtTargetTrait' },
-                    { id: 'UMassLookAtTrait' },
-                    { id: 'UMassStateTreeTrait' },
-                    { id: 'UMassZoneGraphAnnotationTrait' }
+                    {
+                        id: 'UMassLookAtTargetTrait',
+                        properties: [
+                            {
+                                comment: `
+                                    Indicates whether the trait will use an initializer to set target offset using the
+                                    height of the capsule component if available.
+                                `,
+                                specifiers: ['EditAnywhere', 'config'],
+                                category: 'LookAt',
+                                type: 'bool',
+                                name: 'bShouldUseCapsuleComponentToSetTargetOffset',
+                                defaultValue: 'true'
+                            },
+                            {
+                                comment: `
+                                    Priority assigned to the target to influence target selection
+                                `,
+                                specifiers: ['EditAnywhere', 'config'],
+                                category: 'LookAt',
+                                type: 'FMassLookAtPriority',
+                                name: 'Priority',
+                                defaultValue: 'EMassLookAtPriorities::LowestPriority'
+                            },
+                        ],
+                        addsFragments: [
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FMassLookAtTargetFragment'),
+                        ]
+                    },
+                    {
+                        id: 'UMassLookAtTrait',
+                        properties: [],
+                        addsFragments: [
+                            m.ref('FMassLookAtFragment'),
+                            m.ref('FMassLookAtTrajectoryFragment'),
+                        ]
+                    },
+                    {
+                        id: 'UMassStateTreeTrait',
+                        comment: `
+                            Feature that adds StateTree execution functionality to a mass agent.
+                        `,
+                        remark: unindent(
+                            `
+                            # Validation
+                            - \`UMassStateTreeSubsystem\` must be available
+                            - The \`StateTree\` property must be set.
+                            - All subsystems needed by the selected state tree must be available
+                            - All Mass fragments needed by the selected state tree must be available on the current
+                              entity
+                            `
+                        ),
+                        displayName: 'StateTree',
+                        addsFragments: [
+                            m.ref('FMassStateTreeSharedFragment'),
+                            m.ref('FMassStateTreeInstanceFragment')
+                        ],
+                        properties: [
+                            {
+                                category: 'StateTree',
+                                specifiers: ['EditAnywhere'],
+                                metaSpecifiers: {
+                                    RequiredAssetDataTags: "Schema=/Script/MassAIBehavior.MassStateTreeSchema"
+                                },
+                                type: 'TObjectPtr<UStateTree>',
+                                name: 'StateTree'
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassZoneGraphAnnotationTrait',
+                        properties: [],
+                        addsFragments: [
+                            m.ref('FMassZoneGraphAnnotationFragment'),
+                            m.ref('FMassZoneGraphAnnotationVariableTickChunkFragment'),
+                        ]
+                    }
                 ],
                 processors: [
                     { id: 'UMassLookAtProcessor' },
@@ -2175,15 +3839,72 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 traits: [
-                    { id: 'UMassObstacleAvoidanceTrait' },
-                    { id: 'UMassNavigationObstacleTrait' },
-                    { id: 'UMassSmoothOrientationTrait' },
+                    {
+                        id: 'UMassObstacleAvoidanceTrait',
+                        requiredFragments: [
+                            m.ref('FAgentRadiusFragment', { module: M_MASS_COMMON }),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FMassVelocityFragment', { module: 'MassMovement' }),
+                            m.ref('FMassForceFragment', { module: 'MassMovement' }),
+                            m.ref('FMassMoveTargetFragment'),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassNavigationEdgesFragment'),
+                            m.ref('FMassMovingAvoidanceParameters'),
+                            m.ref('FMassStandingAvoidanceParameters'),
+                        ],
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: '',
+                                type: 'FMassMovingAvoidanceParameters',
+                                name: 'MovingParameters'
+                            },
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: '',
+                                type: 'FMassStandingAvoidanceParameters',
+                                name: 'StandingParameters'
+                            },
+                        ]
+                    },
+                    {
+                        id: 'UMassNavigationObstacleTrait',
+                        properties: [],
+                        requiredFragments: [
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FAgentRadiusFragment', { module: M_MASS_COMMON }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassNavigationObstacleGridCellLocationFragment')
+                        ]
+                    },
+                    {
+                        id: 'UMassSmoothOrientationTrait',
+                        properties: [
+                            {
+                                specifiers: ['EditAnywhere'],
+                                category: '',
+                                type: 'FMassSmoothOrientationParameters',
+                                name: 'Orientation'
+                            },
+                        ],
+                        requiredFragments: [
+                            m.ref('FMassMoveTargetFragment'),
+                            m.ref('FMassVelocityFragment', { module: 'MassMovement' }),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassSmoothOrientationParameters')
+                        ]
+
+                    },
                     {
                         id: 'UMassSteeringTrait',
                         requiredFragments: [
                             m.frag('FAgentRadiusFragment'),
                             m.frag('FTransformFragment'),
-                            m.frag('FMassVelocityFragment'),
+                            m.frag('FMassVelocityFragment', { module: 'MassMovement' }),
                             m.frag('FMassForceFragment', { module: 'MassMovement' }),
                         ],
                         addsFragments: [
@@ -2210,17 +3931,23 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     {
                         id: 'UMassSteerToMoveTargetProcessor',
                         parent: U_MASS_PROCESSOR,
-                        requiresFragments: [
-                            m.frag('FTransformFragment', { module: 'MassCommon' }),
-                            m.frag('FMassMoveTargetFragment'),
-                            m.frag('FMassSteeringFragment'),
-                            m.frag('FMassStandingSteeringFragment'),
-                            m.frag('FMassGhostLocationFragment'),
-                            m.frag('FMassForceFragment', { module: 'MassMovement' }),
-                            m.frag('FMassDesiredMovementFragment', { module: 'MassMovement' }),
-                            m.frag('FMassMovementParameters', { module: 'MassMovement' }),
-                            m.frag('FMassMovingSteeringParameters', { const: true, shared: true }),
-                            m.frag('FMassStandingSteeringParameters', { const: true, shared: true }),
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON),
+                                    m.r('FMassMoveTargetFragment'),
+                                    m.r('FMassSteeringFragment'),
+                                    m.r('FMassStandingSteeringFragment'),
+                                    m.r('FMassGhostLocationFragment'),
+                                    m.r('FMassForceFragment').from('MassMovement'),
+                                    m.r('FMassDesiredMovementFragment').from('MassMovement'),
+                                    m.r('FMassMovementParameters').from('MassMovement'),
+                                    m.r('FMassMovingSteeringParameters'),
+                                    m.r('FMassStandingSteeringParameters'),
+                                ],
+                                requiresTags: []
+                            }
                         ]
                     }
                 ]
@@ -2338,7 +4065,19 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     }
                 ],
                 traits: [
-                    { id: 'UMassNavMeshNavigationTrait' },
+                    {
+                        id: 'UMassNavMeshNavigationTrait',
+                        displayName: 'NavMesh Navigation',
+                        properties: [],
+                        requiredFragments: [
+                            m.ref('FMassMoveTargetFragment', { module: 'MassNavigation' }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassNavMeshCachedPathFragment'),
+                            m.ref('FMassNavMeshShortPathFragment'),
+                            m.ref('FMassNavMeshBoundaryFragment'),
+                        ]
+                    },
                 ],
                 processors: [
                     { id: 'UMassNavMeshNavigationBoundaryProcessor' },
@@ -2592,7 +4331,32 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 traits: [
-                    { id: 'UMassZoneGraphNavigationTrait' },
+                    {
+                        id: 'UMassZoneGraphNavigationTrait',
+                        displayName: 'ZoneGraph Navigation',
+                        requiredFragments: [
+                            m.ref('FAgentRadiusFragment', { module: M_MASS_COMMON }),
+                            m.ref('FTransformFragment', { module: M_MASS_COMMON }),
+                            m.ref('FMassVelocityFragment', { module: 'MassMovement' }),
+                            m.ref('FMassMoveTargetFragment', { module: 'MassNavigation' }),
+                        ],
+                        addsFragments: [
+                            m.ref('FMassZoneGraphLaneLocationFragment'),
+                            m.ref('FMassZoneGraphPathRequestFragment'),
+                            m.ref('FMassZoneGraphShortPathFragment'),
+                            m.ref('FMassZoneGraphCachedLaneFragment'),
+                            m.ref('FMassLaneCacheBoundaryFragment'),
+                            m.ref('FMassZoneGraphNavigationParameters'),
+                        ],
+                        properties: [
+                            {
+                                category: 'Movement',
+                                specifiers: ['EditAnywhere'],
+                                type: 'FMassZoneGraphNavigationParameters',
+                                name: 'NavigationParameters'
+                            },
+                        ]
+                    },
                 ],
                 processors: [
                     { id: 'UMassZoneGraphPathFollowProcessor' },

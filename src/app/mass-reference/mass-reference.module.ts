@@ -14,6 +14,8 @@ import { MassElementListComponent } from "./element-list.component";
 import { MassPluginComponent } from "./mass-plugin/mass-plugin.component";
 import { MaterialModule } from "../material.module";
 import { MassTagComponent } from "./mass-tag/mass-tag.component";
+import { MassPropertyListComponent } from "./mass-property-list.component";
+import { A11yModule } from "@angular/cdk/a11y";
 
 @NgModule({
     declarations: [
@@ -25,7 +27,8 @@ import { MassTagComponent } from "./mass-tag/mass-tag.component";
         MassElementComponent,
         MassElementListComponent,
         MassPluginComponent,
-        MassTagComponent
+        MassTagComponent,
+        MassPropertyListComponent
     ],
     providers: [
         MassReferenceService
@@ -35,7 +38,8 @@ import { MassTagComponent } from "./mass-tag/mass-tag.component";
         CommonUiModule,
         MaterialModule,
         FormsModule,
-        RouterModule
+        RouterModule,
+        A11yModule
     ]
 })
 export class MassReferenceModule {

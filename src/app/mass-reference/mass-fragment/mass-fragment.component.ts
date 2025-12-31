@@ -1,125 +1,32 @@
-import { Component, input } from "@angular/core";
-import { MassFragment } from "../mass-types";
+import { Component, computed, inject, input } from "@angular/core";
+import { MassElementRef, MassFragment, MassProcessor } from "../mass-types";
+import { MassReferenceService } from "../mass-reference.service";
 
 @Component({
     selector: 'rez-mass-fragment',
     template: `
         <br/>
-        <strong>Properties</strong>
-        <ul class="properties">
-            @for (prop of fragment().properties; track prop.name) {
-                <li>
-                    <div class="name">
-                        {{ prop.name }}
-                    </div>
-                    @if (prop.type) {
-                        <div class="property">
-                            <label>Type</label>
-                            <code>{{ prop.type }}</code>
-                        </div>
-                    }
-                    @if (prop.comment) {
-                        <div class="property">
-                            <label>Comment</label>
-                            <blockquote>
-                                {{ prop.comment }}
-                            </blockquote>
-                        </div>
-                    }
-                    @if (prop.category) {
-                        <div class="property">
-                            <label>Category</label>
-                            {{ prop.category }}
-                        </div>
-                    }
-                    <div class="property">
-                        <label>Reflected</label>
-                        {{ prop.specifiers !== undefined ? 'Yes' : 'No' }}
-                    </div>
-
-                    @if ((prop.specifiers?.length ?? 0) > 0) {
-                        <div class="property">
-                            <label>Specifiers</label>
-                            <div>
-                                <code>
-                                    {{ (prop.specifiers || []).join(', ') }}
-                                </code>
-                            </div>
-                        </div>
-                    }
-                    @if ((prop.conditionals?.length ?? 0) > 0) {
-                        <div class="property">
-                            <label>Compiled when</label>
-                            <div>
-                                @for (conditional of prop.conditionals; track conditional) {
-                                    <div>
-                                        <code>{{conditional}}</code>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                    @if (prop.defaultValue !== undefined) {
-                        <div class="property">
-                            <label>Default</label>
-                            <div>
-                                <code>{{ prop.defaultValue }}</code>
-                            </div>
-                        </div>
-                    }
-                    @if (keys(prop.metaSpecifiers || {}).length > 0) {
-                        <div class="property">
-                            <label>Meta</label>
-                            <div>
-                                @for (key of keys(prop.metaSpecifiers); track key) {
-                                    <div>
-                                        <code>
-                                            {{ key }}={{ prop.metaSpecifiers?.[key] }}
-                                        </code>
-                                    </div>
-                                }
-                            </div>
-                        </div>
-                    }
-                </li>
-            } @empty {
-                <li>None</li>
-            }
-        </ul>
+        <rez-mass-property-list [properties]="fragment().properties || []" />
+        <rez-mass-element-list name="Added by" [elements]="providerTraits()" />
+        <rez-mass-element-list name="Queries" [elements]="queryRefs()" />
     `,
     styles: `
-        ul.properties {
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 1em;
-
-            li {
-                list-style-type: none;
-                border-left: 1px solid white;
-                padding: 1em;
-
-                div.name {
-                    font-size: 120%;
-                    display: flex;
-                }
-
-                blockquote {
-                    margin: 0;
-                }
-
-                code {
-                    font-size: 110%;
-                }
-            }
-        }
     `,
     standalone: false
 })
 export class MassFragmentComponent {
+    private ref = inject(MassReferenceService);
+
     moduleId = input.required<string>();
     fragment = input.required<MassFragment>();
+    providerTraits = computed(() => this.ref.getTraitsThatProvideFragment(this.fragment()));
+    queryRefs = computed(() =>
+        this.ref.getQueriesThatReferenceFragment(this.fragment())
+            .map(q => ({ q, p: this.ref.resolve<MassProcessor>(q.owner!) }))
+            .filter(pq => pq.p)
+            .map<MassElementRef>(pq => ({ ...this.ref.ref(pq.p)!, remark: `Referenced in query '${pq.q.id}'` }))
 
+    );
     keys(o: any) {
         return Object.keys(o);
     }
