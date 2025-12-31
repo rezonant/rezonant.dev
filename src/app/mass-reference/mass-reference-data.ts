@@ -1,17 +1,19 @@
 import { unindent } from "../../common-ui";
 import { MassElement, MassElementRef, MassFragmentRef, MassModule, MassPlugin, MassProcessingRequirement, MassProcessorExecutionFlag, MassTag } from "./mass-types";
 
-export const F_MASS_TAG: MassElementRef = { id: 'FMassTag', module: 'MassEntity' };
-export const F_MASS_FRAGMENT: MassElementRef = { id: 'FMassFragment', module: 'MassEntity' }
-export const F_MASS_SHARED_FRAGMENT: MassElementRef = { id: 'FMassSharedFragment', module: 'MassEntity' }
-export const F_MASS_CONST_SHARED_FRAGMENT: MassElementRef = { id: 'FMassConstSharedFragment', module: 'MassEntity' }
+export const M_MASS_COMMON = 'MassCommon';
+export const M_MASS_ENTITY = 'MassEntity';
+
+export const F_MASS_TAG: MassElementRef = { id: 'FMassTag', module: M_MASS_ENTITY };
+export const F_MASS_FRAGMENT: MassElementRef = { id: 'FMassFragment', module: M_MASS_ENTITY }
+export const F_MASS_SHARED_FRAGMENT: MassElementRef = { id: 'FMassSharedFragment', module: M_MASS_ENTITY }
+export const F_MASS_CONST_SHARED_FRAGMENT: MassElementRef = { id: 'FMassConstSharedFragment', module: M_MASS_ENTITY }
 export const U_MASS_TRANSLATOR: MassElementRef = { id: 'UMassTranslator', module: 'MassSpawner' }
-export const U_MASS_PROCESSOR: MassElementRef = { id: 'UMassProcessor', module: 'MassEntity' }
+export const U_MASS_PROCESSOR: MassElementRef = { id: 'UMassProcessor', module: M_MASS_ENTITY }
 export const U_MASS_ENTITY_TRAIT_BASE: MassElementRef = { id: 'UMassEntityTraitBase', module: 'MassSpawner' }
 export const F_OBJECT_WRAPPER_FRAGMENT: MassElementRef = { id: 'FObjectWrapperFragment', module: 'MassCommon' }
-export const F_MASS_CHUNK_FRAGMENT: MassElementRef = { id: 'FMassChunkFragment', module: 'MassEntity' }
+export const F_MASS_CHUNK_FRAGMENT: MassElementRef = { id: 'FMassChunkFragment', module: M_MASS_ENTITY }
 
-export const M_MASS_COMMON = 'MassCommon';
 
 export const E_ALL_NET_MODES: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client'];
 export const E_ALL_WORLD_MODES: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client', 'EditorWorld'];
@@ -466,11 +468,23 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                     {
                         id: 'FMassSceneComponentWrapperFragment',
-                        parent: F_OBJECT_WRAPPER_FRAGMENT
+                        parent: F_OBJECT_WRAPPER_FRAGMENT,
+                        properties: [
+                            {
+                                name: 'Component',
+                                type: 'TWeakObjectPtr<USceneComponent>'
+                            }
+                        ]
                     },
                     {
                         id: 'FDataFragment_BehaviorTreeComponentWrapper',
-                        poarent: F_OBJECT_WRAPPER_FRAGMENT
+                        parent: F_OBJECT_WRAPPER_FRAGMENT,
+                        properties: [
+                            {
+                                name: 'Component',
+                                type: 'TWeakObjectPtr<UBehaviorTreeComponent>'
+                            }
+                        ]
                     }
                 ],
                 tags: [
@@ -1068,19 +1082,65 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                     {
                         id: 'FMassSimulationLODSharedFragment',
-                        parent: F_MASS_SHARED_FRAGMENT
+                        parent: F_MASS_SHARED_FRAGMENT,
+                        properties: [
+                            {
+                                comment: `Runtime data for matching the simulation LOD parameters`,
+                                name: 'LODCalculator',
+                                type: 'TMassLODCalculator<FMassSimulationLODLogic>',
+                            },
+                            {
+                               name: 'bHasAdjustedDistancesFromCount',
+                               type: 'bool',
+                               defaultValue: 'false',
+                            }
+                        ]
                     },
                     {
                         id: 'FMassVariableTickChunkFragment',
-                        parent: F_MASS_CHUNK_FRAGMENT
+                        parent: F_MASS_CHUNK_FRAGMENT,
+                        properties: [
+                            {
+                                specifiers: [],
+                                type: 'bool',
+                                name: 'bShouldTickThisFrame',
+                                defaultValue: 'true'
+                            },
+                            {
+                                specifiers: [],
+                                type: 'TEnumAsByte<EMassLOD::Type>',
+                                name: 'LOD',
+                                defaultValue: 'EMassLOD::Max'
+                            },
+                            {
+                                specifiers: [],
+                                type: 'float',
+                                name: 'TimeUntilNextTick',
+                                defaultValue: '0.0f',
+                            },
+                            {
+                                specifiers: [],
+                                type: 'int32',
+                                name: 'LastChunkSerialModificationNumber',
+                                defaultValue: 'INDEX_NONE',
+                            },
+                        ]
                     },
                     {
                         id: 'FMassSimulationVariableTickChunkFragment',
-                        parent: m.ref('FMassVariableTickChunkFragment')
+                        parent: m.ref('FMassVariableTickChunkFragment'),
+                        properties: []
                     },
                     {
                         id: 'FMassSimulationVariableTickSharedFragment',
-                        parent: F_MASS_SHARED_FRAGMENT
+                        parent: F_MASS_SHARED_FRAGMENT,
+                        properties: [
+                            {
+                                comment: `Runtime data for matching the simulation tick rate parameters`,
+                                type: 'TMassLODTickRateController<FMassSimulationVariableTickChunkFragment, FMassSimulationLODLogic>',
+                                name: 'LODTickRateController'
+                            }
+                        ]
                     }
                 ],
                 traits: [
@@ -1831,7 +1891,57 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                     {
                         id: 'FMassReplicationSharedFragment',
-                        parent: F_MASS_SHARED_FRAGMENT
+                        parent: F_MASS_SHARED_FRAGMENT,
+                        properties: [
+                            {
+                                type: 'FMassBubbleInfoClassHandle',
+                                name: 'BubbleInfoClassHandle'
+                            },
+                            {
+                                type: 'FMassClientHandle',
+                                name: 'CurrentClientHandle',
+                            },
+                            {
+                                type: 'TArray<FMassClientHandle>',
+                                name: 'CachedClientHandles',
+                            },
+                            {
+                                comment: `
+                                `,
+                                specifiers: ['Transient'],
+                                type: 'TArray<TObjectPtr<AMassClientBubbleInfoBase>>',
+                                name: 'BubbleInfos'
+                            },
+                            {
+                                type: 'TMassLODCollector<FReplicationLODLogic>',
+                                name: 'LODCollector'
+                            },
+                            {
+                                type: 'TMassLODCalculator<FReplicationLODLogic>',
+                                name: 'LODCalculator'
+                            },
+                            {
+                                type: 'bool',
+                                name: 'bHasAdjustedDistancesFromCount',
+                                defaultValue: 'false',
+                            },
+                            {
+                                type: 'bool',
+                                name: 'bEntityQueryInitialized',
+                                defaultValue: 'false'
+                            },
+                            {
+                                type: 'FMassEntityQuery',
+                                name: 'EntityQuery'
+                            },
+                            {
+                                specifiers: ['Transient'],
+                                mutable: true,
+                                type: 'TObjectPtr<UMassReplicatorBase>',
+                                name: 'CachedReplicator',
+                                defaultValue: 'nullptr'
+                            },
+                        ]
                     }
                 ],
                 traits: [
@@ -2318,8 +2428,49 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             },
                         ]
                     },
-                    { id: 'FMassDistanceLODSharedFragment', parent: F_MASS_SHARED_FRAGMENT },
-                    { id: 'FMassVisualizationLODSharedFragment', parent: F_MASS_SHARED_FRAGMENT },
+                    {
+                        id: 'FMassDistanceLODSharedFragment',
+                        parent: F_MASS_SHARED_FRAGMENT,
+                        comment: `
+                            Simplest version of LOD Calculation based strictly on Distance parameters
+                            Compared to FMassVisualizationLODSharedFragment, we cannot Adjust the Distance from count
+                            and we care about a MassLODCalculator with a new LOD logic that excludes Visibility
+                            computation.
+                        `,
+                        properties: [
+                            {
+                                type: 'TMassLODCalculator<FMassDistanceLODLogic>',
+                                name: 'LODCalculator',
+                            },
+                            {
+                                specifiers: ['Transient'],
+                                type: 'TObjectPtr<const UScriptStruct>',
+                                name: 'FilterTag',
+                                defaultValue: 'nullptr'
+                            },
+                        ]
+                    },
+                    {
+                        id: 'FMassVisualizationLODSharedFragment',
+                        parent: F_MASS_SHARED_FRAGMENT,
+                        properties: [
+                            {
+                                type: 'TMassLODCalculator<FMassRepresentationLODLogic>',
+                                name: 'LODCalculator'
+                            },
+                            {
+                                type: 'bool',
+                                name: 'bHasAdjustedDistancesFromCount',
+                                defaultValue: 'false',
+                            },
+                            {
+                                specifiers: ['Transient'],
+                                defaultValue: 'nullptr',
+                                type: 'TObjectPtr<const UScriptStruct>',
+                                name: 'FilterTag'
+                            },
+                        ]
+                    },
                 ],
                 traits: [
                     {
@@ -3062,7 +3213,7 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             It can also be used at runtime to copy values from UObjects to fragments and back.
                         `,
                         executionFlags: E_ALL,
-                        parent: m.ref('UMassProcessor', { module: 'MassEntity' }),
+                        parent: m.ref('UMassProcessor', { module: M_MASS_ENTITY }),
                         queries: []
                     }
                 ]
@@ -3237,7 +3388,19 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                     {
                         id: 'FMassZoneGraphAnnotationVariableTickChunkFragment',
-                        parent: F_MASS_CHUNK_FRAGMENT
+                        parent: F_MASS_CHUNK_FRAGMENT,
+                        properties: [
+                            {
+                                name: 'TimeUntilNextTick',
+                                type: 'float',
+                                defaultValue: '0.0f',
+                            },
+                            {
+                                name: 'bInitialized',
+                                type: 'bool',
+                                defaultValue: 'false',
+                            },
+                        ]
                     }
                 ],
                 traits: [
@@ -4477,7 +4640,7 @@ export const MASS_REFERENCE: MassPlugin[] = [
                         `,
                         executionFlags: E_ALL_NET_MODES,
                         executionGroup: EG_Avoidance,
-                        executeAfter: [ EG_LOD ],
+                        executeAfter: [EG_LOD],
                         queries: [
                             {
                                 id: 'EntityQuery',
@@ -4491,7 +4654,7 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                     m.r('FMassAvoidanceEntitiesToIgnoreFragment').readOnly().optional(),
                                     m.r('FMassMovingAvoidanceParameters'),
                                     m.r('FMassMovementParameters').from('MassMovement'),
-                                    m.r('FMassDebugLogFragment').from('MassEntity').readOnly().optional()
+                                    m.r('FMassDebugLogFragment').from(M_MASS_ENTITY).readOnly().optional()
                                         .withRemark(unindent(
                                             `
                                             Conditional: WITH_MASSGAMEPLAY_DEBUG and WITH_MASSENTITY_DEBUG
@@ -4507,9 +4670,68 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             }
                         ]
                     },
-                    { id: 'UMassStandingAvoidanceProcessor' },
-                    { id: 'UMassSmoothOrientationProcessor' },
-
+                    {
+                        id: 'UMassStandingAvoidanceProcessor',
+                        comment: `Avoidance while standing.`,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Avoidance,
+                        executeAfter: ['MassMovingAvoidanceProcessor'],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresTags: [
+                                    m.r('FMassMediumLODTag').from('MassLOD').none(),
+                                    m.r('FMassLowLODTag').from('MassLOD').none(),
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                ],
+                                requiresFragments: [
+                                    m.r('FMassGhostLocationFragment').readWrite(),
+                                    m.r('FMassNavigationEdgesFragment').readOnly(),
+                                    m.r('FMassMoveTargetFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassAvoidanceEntitiesToIgnoreFragment').readOnly().optional(),
+                                    m.r('FMassDebugLogFragment').from(M_MASS_ENTITY).readOnly().optional()
+                                        .withRemark(unindent(
+                                            `
+                                            Conditional: WITH_MASSGAMEPLAY_DEBUG and WITH_MASSENTITY_DEBUG
+                                            `
+                                        ))
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassSmoothOrientationProcessor',
+                        comment: `Updates agent's orientation based on current movement.`,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Movement,
+                        queries: [
+                            {
+                                id: 'HighResEntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassMoveTargetFragment').readOnly(),
+                                    m.r('FMassDesiredMovementFragment').from('MassMovement').readWrite(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readWrite(),
+                                    m.r('FMassSmoothOrientationParameters'),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                ]
+                            },
+                            {
+                                id: 'LowResEntityQuery_Conditional',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON),
+                                    m.r('FMassMoveTargetFragment'),
+                                    m.r('FMassSimulationVariableTickChunkFragment').from('MassLOD'),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD'),
+                                ]
+                            },
+                        ]
+                    },
                     {
                         id: 'UMassSteerToMoveTargetProcessor',
                         parent: U_MASS_PROCESSOR,
@@ -4662,8 +4884,46 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 processors: [
-                    { id: 'UMassNavMeshNavigationBoundaryProcessor' },
-                    { id: 'UMassNavMeshPathFollowProcessor' },
+                    {
+                        id: 'UMassNavMeshNavigationBoundaryProcessor',
+                        comment: `Fills FMassNavigationEdgesFragment using FMassNavMeshShortPathFragment.`,
+                        executeBefore: [EG_Avoidance],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassNavMeshShortPathFragment').readOnly(),
+                                    m.r('FMassMoveTargetFragment').from('MassNavigation').readOnly(),
+                                    m.r('FMassNavMeshBoundaryFragment').readWrite(),
+                                    m.r('FMassNavigationEdgesFragment').from('MassNavigation').readWrite()
+                                        .withRemark('to output edges for avoidance'),
+                                ]
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassNavMeshPathFollowProcessor',
+                        comment: `Processor for updating move target on a navmesh short path.`,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Tasks,
+                        executeBefore: [EG_Avoidance],
+                        queries: [
+                            {
+                                id: 'EntityQuery_Conditional',
+                                requiresFragments: [
+                                    m.r('FMassNavMeshShortPathFragment').readWrite(),
+                                    m.r('FMassMoveTargetFragment').from('MassNavigation').readWrite(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassSimulationLODFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassSimulationVariableTickFragment').from('MassLOD').readOnly().optional(),
+                                ]
+                            }
+
+
+
+
+                        ]
+                    },
                 ]
             })),
             declareModule('MassZoneGraphNavigation', m => ({
@@ -4941,8 +5201,65 @@ export const MASS_REFERENCE: MassPlugin[] = [
                     },
                 ],
                 processors: [
-                    { id: 'UMassZoneGraphPathFollowProcessor' },
-                    { id: 'UMassZoneGraphLaneCacheBoundaryProcessor' },
+                    {
+                        id: 'UMassZoneGraphPathFollowProcessor',
+                        comment: `Processor for updating move target on ZoneGraph path.`,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Tasks,
+                        executeBefore: [EG_Avoidance],
+                        queries: [
+                            {
+                                id: 'EntityQuery_Conditional',
+                                requiresFragments: [
+                                    m.r('FMassZoneGraphShortPathFragment').readWrite(),
+                                    m.r('FMassZoneGraphLaneLocationFragment').readWrite(),
+                                    m.r('FMassMoveTargetFragment').from('MassNavigation').readWrite(),
+                                    m.r('FMassSimulationLODFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassSimulationVariableTickFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').from('MassLOD').readOnly().optional(),
+                                    m.r('FMassDebugLogFragment').from(M_MASS_ENTITY).readOnly().optional()
+                                        .withRemark(unindent(
+                                            `
+                                            Conditional: WITH_MASSGAMEPLAY_DEBUG and WITH_MASSENTITY_DEBUG
+                                            `
+                                        ))
+                                ],
+                                requiresSubsystems: [
+                                    m.r('UZoneGraphSubsystem')
+                                ],
+                            }
+                        ]
+                    },
+                    {
+                        id: 'UMassZoneGraphLaneCacheBoundaryProcessor',
+                        comment: `
+                            ZoneGraph lane cache boundary processor
+                        `,
+                        executionFlags: E_ALL_NET_MODES,
+                        executeAfter: [EG_LOD],
+                        executeBefore: [EG_Avoidance],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassZoneGraphCachedLaneFragment').readOnly(),
+                                    m.r('FMassMoveTargetFragment').from('MassNavigation').readOnly(),
+                                    m.r('FMassZoneGraphLaneLocationFragment').readOnly(),
+                                    m.r('FMassLaneCacheBoundaryFragment').readWrite(),
+                                    m.r('FMassNavigationEdgesFragment').from('MassNavigation').readWrite().withRemark(`output edges`),
+                                    m.r('FMassDebugLogFragment').from(M_MASS_ENTITY).readOnly().optional()
+                                        .withRemark(unindent(
+                                            `
+                                            Conditional: WITH_MASSGAMEPLAY_DEBUG and WITH_MASSENTITY_DEBUG
+                                            `
+                                        ))
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                ],
+                            }
+                        ],
+                    },
                 ]
             }))
         ]
