@@ -4408,7 +4408,7 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             Does not update Off-LOD entities.
                         `,
                         executionFlags: E_ALL_NET_MODES,
-                        executeAfter: [ EG_Movement ],
+                        executeAfter: [EG_Movement],
                         queries: [
                             {
                                 id: 'EntityQuery',
@@ -4423,8 +4423,90 @@ export const MASS_REFERENCE: MassPlugin[] = [
                             }
                         ]
                     },
-                    { id: 'UMassNavigationObstacleGridProcessor' },
-                    { id: 'UMassMovingAvoidanceProcessor' },
+                    {
+                        id: 'UMassNavigationObstacleGridProcessor',
+                        comment: `Processor to update obstacle grid`,
+                        executionFlags: E_ALL_NET_MODES,
+                        executeAfter: [EG_Movement],
+                        queries: [
+                            {
+                                id: 'BaseEntityQuery',
+                                requiresFragments: [
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassNavigationObstacleGridCellLocationFragment').readWrite(),
+                                ],
+                                requiresSubsystems: [
+                                    m.r('UMassNavigationSubsystem').readWrite()
+                                ]
+                            },
+                            {
+                                id: 'AddToGridEntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassAvoidanceColliderFragment').readOnly().optional(),
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                    m.r('FMassInNavigationObstacleGridTag').none(),
+                                ]
+                            },
+                            {
+                                id: 'UpdateGridEntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassAvoidanceColliderFragment').readOnly().optional()
+                                ],
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                    m.r('FMassInNavigationObstacleGridTag').all(),
+                                ]
+                            },
+                            {
+                                id: 'RemoveFromGridEntityQuery',
+                                requiresTags: [
+                                    m.r('FMassOffLODTag').from('MassLOD').all(),
+                                    m.r('FMassInNavigationObstacleGridTag').all(),
+                                ]
+                            },
+                        ]
+
+                    },
+                    {
+                        id: 'UMassMovingAvoidanceProcessor',
+                        comment: `
+                            Experimental: move using cumulative forces to avoid close agents
+                        `,
+                        executionFlags: E_ALL_NET_MODES,
+                        executionGroup: EG_Avoidance,
+                        executeAfter: [ EG_LOD ],
+                        queries: [
+                            {
+                                id: 'EntityQuery',
+                                requiresFragments: [
+                                    m.r('FMassForceFragment').from('MassMovement').readWrite(),
+                                    m.r('FMassNavigationEdgesFragment').readOnly(),
+                                    m.r('FMassMoveTargetFragment').readOnly(),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassVelocityFragment').from('MassMovement').readOnly(),
+                                    m.r('FAgentRadiusFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassAvoidanceEntitiesToIgnoreFragment').readOnly().optional(),
+                                    m.r('FMassMovingAvoidanceParameters'),
+                                    m.r('FMassMovementParameters').from('MassMovement'),
+                                    m.r('FMassDebugLogFragment').from('MassEntity').readOnly().optional()
+                                        .withRemark(unindent(
+                                            `
+                                            Conditional: WITH_MASSGAMEPLAY_DEBUG and WITH_MASSENTITY_DEBUG
+                                            `
+                                        ))
+                                ],
+                                requiresTags: [
+                                    m.r('FMassMediumLODTag').from('MassLOD').none(),
+                                    m.r('FMassLowLODTag').from('MassLOD').none(),
+                                    m.r('FMassOffLODTag').from('MassLOD').none(),
+                                ]
+
+                            }
+                        ]
+                    },
                     { id: 'UMassStandingAvoidanceProcessor' },
                     { id: 'UMassSmoothOrientationProcessor' },
 

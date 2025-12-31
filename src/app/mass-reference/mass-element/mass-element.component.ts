@@ -32,8 +32,9 @@ import { MassProcessor } from "../mass-types";
 
             <ul class="facts">
                 @if (element().stub) {
-                    <li>
-                        <mat-icon matTooltip="This is a stub">broken_image</mat-icon>
+                    <li matTooltip="This page is a stub. You could send a PR, if you want">
+                        <mat-icon>broken_image</mat-icon>
+                        Stub
                     </li>
                 }
                 @let parent = element().parent;
