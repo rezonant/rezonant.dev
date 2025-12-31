@@ -29,43 +29,52 @@ import { MassReferenceService } from "../mass-reference.service";
                 <br/>
             }
 
-            <ul class="facts">
-                @if (element().stub) {
-                    <li matTooltip="This page is a stub. You could send a PR, if you want">
-                        <mat-icon>broken_image</mat-icon>
-                        Stub
-                    </li>
-                }
-                @let parent = element().parent;
-                @if (parent) {
-                    <li>Extends <a routerLink="/reference/unreal/mass/{{ parent.module }}/{{ parent.id }}">
-                        {{ parent.id }}
-                    </a></li>
-                }
-                @if (module()) {
-                    <li>
-                    <a routerLink="/reference/unreal/mass/{{ module().id }}">
-                        <mat-icon class="inline">group_work</mat-icon>
-                        {{ module().id }}
-                    </a>
-                    </li>
-                }
-
-                @let plugin = module().plugin;
-                @if (plugin) {
-                    <li>
-                        <a routerLink="/reference/unreal/mass/plugins/{{ plugin }}">
-                            @if (plugin === 'Mass') {
-                                <mat-icon class="inline">foundation</mat-icon>
-                                Core
-                            } @else {
-                                <mat-icon class="inline">extension</mat-icon>
-                                {{ plugin }}
-                            }
+            <div class="fact-bar">
+                <ul class="facts">
+                    @if (element().stub) {
+                        <li matTooltip="This page is a stub. You could send a PR, if you want">
+                            <mat-icon>broken_image</mat-icon>
+                            Stub
+                        </li>
+                    }
+                    @let parent = element().parent;
+                    @if (parent) {
+                        <li>Extends <a routerLink="/reference/unreal/mass/{{ parent.module }}/{{ parent.id }}">
+                            {{ parent.id }}
+                        </a></li>
+                    }
+                    @if (module()) {
+                        <li>
+                        <a routerLink="/reference/unreal/mass/{{ module().id }}">
+                            <mat-icon class="inline">group_work</mat-icon>
+                            {{ module().id }}
                         </a>
-                    </li>
+                        </li>
+                    }
+
+                    @let plugin = module().plugin;
+                    @if (plugin) {
+                        <li>
+                            <a routerLink="/reference/unreal/mass/plugins/{{ plugin }}">
+                                @if (plugin === 'Mass') {
+                                    <mat-icon class="inline">foundation</mat-icon>
+                                    Core
+                                } @else {
+                                    <mat-icon class="inline">extension</mat-icon>
+                                    {{ plugin }}
+                                }
+                            </a>
+                        </li>
+                    }
+                </ul>
+                <div class="spacer"></div>
+                @if (subclasses().length > 0) {
+                    <a routerLink="/reference/unreal/mass/{{ moduleId() }}/{{ id() }}/subclasses">
+                        Subclasses
+                        ({{ subclasses().length }})
+                    </a>
                 }
-            </ul>
+            </div>
 
             @let comment = element().comment;
             @if (comment) {
@@ -79,46 +88,30 @@ import { MassReferenceService } from "../mass-reference.service";
             }
 
 
-            <mat-tab-group [mat-stretch-tabs]="false">
-                <mat-tab label="Details">
-                    @switch (element().type) {
-                        @case ('trait') {
-                            <rez-mass-trait [moduleId]="module().id" [trait]="asAny(element())" />
-                        }
-                        @case ('processor') {
-                            <rez-mass-processor [moduleId]="module().id" [processor]="asAny(element())" />
-                        }
-                        @case ('fragment') {
-                            <rez-mass-fragment [moduleId]="module().id" [fragment]="asAny(element())" />
-                        }
-                        @case ('tag') {
-                            <rez-mass-tag [moduleId]="module().id" [tag]="asAny(element())" />
-                        }
-                        @default {
-                            <em>Unknown element type {{ element().type }}</em>
-                        }
-                    }
-                </mat-tab>
-                @if (subclasses().length > 0) {
-                    <mat-tab label="Subclasses">
-                        <br/>
-                        @for (subclass of subclasses(); track subclass.id) {
-                            <div>
-                                <a routerLink="/reference/unreal/mass/{{ subclass.module }}/{{ subclass.id }}">
-                                    {{ subclass.id }}
-                                </a>
-                            </div>
-                        }
-                    </mat-tab>
+            @switch (element().type) {
+                @case ('trait') {
+                    <rez-mass-trait [moduleId]="module().id" [trait]="asAny(element())" />
                 }
-                <mat-tab label="JSON">
-                    <pre>{{ element() | json }}</pre>
-                </mat-tab>
-            </mat-tab-group>
-
+                @case ('processor') {
+                    <rez-mass-processor [moduleId]="module().id" [processor]="asAny(element())" />
+                }
+                @case ('fragment') {
+                    <rez-mass-fragment [moduleId]="module().id" [fragment]="asAny(element())" />
+                }
+                @case ('tag') {
+                    <rez-mass-tag [moduleId]="module().id" [tag]="asAny(element())" />
+                }
+                @default {
+                    <em>Unknown element type {{ element().type }}</em>
+                }
+            }
         }
     `,
     styles: `
+        .fact-bar {
+            display: flex;
+            align-items: center;
+        }
 
         mat-icon {
             vertical-align: middle;
@@ -136,6 +129,8 @@ export class MassElementComponent {
     asAny = (t: any) => t;
     moduleId = input.required<string>();
     id = input.required<string>();
+
+    sourceUrl = computed(() => `/reference/unreal/mass/${this.moduleId()}/${this.id()}/source`);
 
     notFound = computed(() => !this.ref.getElement(this.moduleId(), this.id()));
     module = computed(() => this.ref.getModule(this.moduleId())!);

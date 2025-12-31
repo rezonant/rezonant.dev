@@ -19,6 +19,8 @@ import { A11yModule } from "@angular/cdk/a11y";
 import { MassReferenceShellComponent } from "./mass-reference-shell.component";
 import { MassStubsComponent } from "./mass-stubs/mass-stubs.component";
 import { MassJsonComponent } from "./mass-json.component";
+import { MassElementJsonComponent } from "./mass-element-json/mass-element.component";
+import { MassElementSubclassesComponent } from "./mass-element-subclasses/mass-element-subclasses.component";
 
 @NgModule({
     declarations: [
@@ -34,7 +36,9 @@ import { MassJsonComponent } from "./mass-json.component";
         MassPluginComponent,
         MassTagComponent,
         MassPropertyListComponent,
-        MassJsonComponent
+        MassJsonComponent,
+        MassElementJsonComponent,
+        MassElementSubclassesComponent
     ],
     providers: [
         MassReferenceService
@@ -60,7 +64,9 @@ export class MassReferenceModule {
                     { path: 'source', component: MassJsonComponent },
                     { path: 'plugins/:pluginId', component: MassPluginComponent },
                     { path: ':moduleId', component: MassModuleComponent },
-                    { path: ':moduleId/:id', component: MassElementComponent }
+                    { path: ':moduleId/:id', component: MassElementComponent },
+                    { path: ':moduleId/:id/subclasses', component: MassElementSubclassesComponent },
+                    { path: ':moduleId/:id/source', component: MassElementJsonComponent },
                 ]
             }
         ];

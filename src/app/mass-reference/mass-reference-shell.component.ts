@@ -1,9 +1,12 @@
-import { Component, ElementRef, inject, PLATFORM_ID, viewChild } from "@angular/core";
-import { MassReferenceService, SearchResult, IndexEntry } from "./mass-reference.service";
-import { MatAutocompleteActivatedEvent } from "@angular/material/autocomplete";
-import { Router } from "@angular/router";
-import { MassElement } from "./mass-types";
 import { isPlatformServer } from "@angular/common";
+import { Component, computed, ElementRef, inject, PLATFORM_ID, Signal, viewChild } from "@angular/core";
+import { ActivatedRoute, Router, RouterOutlet } from "@angular/router";
+import { IndexEntry, MassReferenceService } from "./mass-reference.service";
+import { MassElement } from "./mass-types";
+
+export interface ShellPage {
+    sourceUrl: Signal<string>;
+}
 
 @Component({
     selector: 'rez-massref-shell',
@@ -33,8 +36,26 @@ import { isPlatformServer } from "@angular/common";
                 <mat-icon>more_vert</mat-icon>
             </button>
             <mat-menu #menu>
-                <a mat-menu-item routerLink="/reference/unreal/mass/stubs">Stubs</a>
-                <a mat-menu-item routerLink="/reference/unreal/mass/source">Source</a>
+                @defer {
+                    @let sourceUrl = page?.sourceUrl?.();
+                    @if (sourceUrl) {
+                        @if (sourceUrl) {
+                            <a mat-menu-item [routerLink]="sourceUrl">
+                                <mat-icon>code</mat-icon>
+                                Source
+                            </a>
+                        }
+                        <mat-divider />
+                    }
+                }
+                <a mat-menu-item routerLink="/reference/unreal/mass/stubs">
+                    <mat-icon>checklist</mat-icon>
+                    Stubs
+                </a>
+                <a mat-menu-item routerLink="/reference/unreal/mass/source">
+                    <mat-icon>code</mat-icon>
+                    Raw Data
+                </a>
             </mat-menu>
         </nav>
         <mat-autocomplete
@@ -53,7 +74,7 @@ import { isPlatformServer } from "@angular/common";
                 </mat-option>
             }
         </mat-autocomplete>
-        <router-outlet />
+        <router-outlet #outlet />
     `,
     styles: `
         .search-result {
@@ -100,13 +121,28 @@ export class MassReferenceShellComponent {
     private ref = inject(MassReferenceService);
     private router = inject(Router);
     private platformId = inject(PLATFORM_ID);
+    private route = inject(ActivatedRoute);
 
+    outlet = viewChild.required(RouterOutlet);
     searchBox = viewChild.required<ElementRef>('searchBox');
     searchQuery: string = '';
     searchResults: IndexEntry[] = [];
 
+    get page() {
+        if (!this.outlet().isActivated)
+            return undefined;
+        return this.outlet().component as ShellPage;
+    }
+
     globalKeyDown = (ev: KeyboardEvent) => {
         let modified = (ev.ctrlKey || ev.altKey);
+
+        if (modified && ev.key === '.') {
+            ev.stopImmediatePropagation();
+            ev.preventDefault();
+            let page = this.page;
+            debugger;
+        }
 
         if (modified && ev.key === 'p') {
             ev.stopImmediatePropagation();
