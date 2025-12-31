@@ -1,0 +1,35 @@
+.lists {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    .plugin-list, .module-list, rez-mass-element-list {
+        border: 1px solid #23506e;
+        border-radius: 5px;
+        width: calc(50% - 0.5em);
+        padding: 1em;
+
+        & > strong, ::ng-deep .element-list-heading {
+            display: block;
+            margin: 1em 0;
+        }
+        ::ng-deep ul {
+            margin: 0;
+            padding: 0;
+
+            li {
+                padding: 0;
+                list-style-type: none;
+                margin: 0;
+            }
+        }
+    }
+}
+
+
+@media (max-width: 450px) {
+    .lists {
+        .plugin-list, .module-list, rez-mass-element-list {
+            width: calc(100%);
+        }
+    }
+}

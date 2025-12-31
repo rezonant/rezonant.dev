@@ -119,6 +119,12 @@ interface MinimalElement {
             vertical-align: middle;
         }
 
+        li {
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .note-tag {
             opacity: 0.5;
         }

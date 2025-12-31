@@ -17,11 +17,14 @@ import { MassTagComponent } from "./mass-tag/mass-tag.component";
 import { MassPropertyListComponent } from "./mass-property-list.component";
 import { A11yModule } from "@angular/cdk/a11y";
 import { MassReferenceShellComponent } from "./mass-reference-shell.component";
+import { MassStubsComponent } from "./mass-stubs/mass-stubs.component";
+import { MassJsonComponent } from "./mass-json.component";
 
 @NgModule({
     declarations: [
         MassReferenceShellComponent,
         MassIndexComponent,
+        MassStubsComponent,
         MassModuleComponent,
         MassTraitComponent,
         MassProcessorComponent,
@@ -30,7 +33,8 @@ import { MassReferenceShellComponent } from "./mass-reference-shell.component";
         MassElementListComponent,
         MassPluginComponent,
         MassTagComponent,
-        MassPropertyListComponent
+        MassPropertyListComponent,
+        MassJsonComponent
     ],
     providers: [
         MassReferenceService
@@ -52,6 +56,8 @@ export class MassReferenceModule {
                 component: MassReferenceShellComponent,
                 children: [
                     { path: '', component: MassIndexComponent },
+                    { path: 'stubs', component: MassStubsComponent },
+                    { path: 'source', component: MassJsonComponent },
                     { path: 'plugins/:pluginId', component: MassPluginComponent },
                     { path: ':moduleId', component: MassModuleComponent },
                     { path: ':moduleId/:id', component: MassElementComponent }

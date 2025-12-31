@@ -10,8 +10,6 @@ import { MassReferenceService } from "../mass-reference.service";
         <rez-mass-element-list name="Added by" [showRemarks]="false" [showSummary]="true" [elements]="providerTraits()" />
         <rez-mass-element-list name="Queries" [elements]="queryRefs()" />
     `,
-    styles: `
-    `,
     standalone: false
 })
 export class MassFragmentComponent {

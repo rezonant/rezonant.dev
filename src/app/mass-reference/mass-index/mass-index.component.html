@@ -1,0 +1,32 @@
+<div class="lists">
+    <div class="plugin-list">
+        <strong>Plugins</strong>
+        <ul>
+        @for (plugin of plugins; track plugin.id) {
+            <li>
+                <a routerLink="/reference/unreal/mass/plugins/{{ plugin.id }}">
+                    {{ plugin.name || plugin.id }}
+                </a>
+            </li>
+        }
+        </ul>
+    </div>
+
+    <div class="module-list">
+        <strong>Modules</strong>
+        <ul>
+        @for (module of modules; track module.id) {
+            <li>
+                <a routerLink="/reference/unreal/mass/{{ module.id }}">
+                    {{ module.name || module.id }}
+                </a>
+            </li>
+        }
+        </ul>
+    </div>
+
+    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Traits" [elements]="traits" />
+    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Fragments" [elements]="fragments" />
+    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Processors" [elements]="processors" />
+    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Tags" [elements]="tags" />
+</div>

@@ -1,6 +1,5 @@
 import { Component, computed, inject, input } from "@angular/core";
 import { MassReferenceService } from "../mass-reference.service";
-import { MassProcessor } from "../mass-types";
 
 @Component({
     selector: 'rez-mass-element',

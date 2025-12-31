@@ -3,12 +3,12 @@ import { MassReferenceService } from "../mass-reference.service";
 import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
 
 @Component({
-    selector: 'rez-mass-index',
-    templateUrl: './mass-index.component.html',
-    styleUrl: './mass-index.component.scss',
+    selector: 'rez-mass-stubs',
+    templateUrl: './mass-stubs.component.html',
+    styleUrl: './mass-stubs.component.scss',
     standalone: false
 })
-export class MassIndexComponent {
+export class MassStubsComponent {
     private ref = inject(MassReferenceService);
 
     plugins = this.ref.getPlugins();
@@ -18,6 +18,10 @@ export class MassIndexComponent {
     fragments: MassFragment[] = [];
     processors: MassProcessor[] = [];
     tags: MassTag[] = [];
+    stubTraits: MassTrait[] = [];
+    stubFragments: MassFragment[] = [];
+    stubProcessors: MassProcessor[] = [];
+    stubTags: MassTag[] = [];
 
     ngOnInit() {
         for (let module of this.modules) {
@@ -25,6 +29,11 @@ export class MassIndexComponent {
             this.fragments.push(...(module.fragments || []) as any);
             this.processors.push(...(module.processors || []) as any);
             this.tags.push(...(module.tags || []) as any);
+
+            this.stubTraits = this.traits.filter(x => x.stub);
+            this.stubFragments = this.fragments.filter(x => x.stub);
+            this.stubProcessors = this.processors.filter(x => x.stub);
+            this.stubTags = this.tags.filter(x => x.stub);
         }
     }
 }

@@ -28,23 +28,31 @@ import { isPlatformServer } from "@angular/common";
                     />
                 <mat-icon matPrefix>search</mat-icon>
             </mat-form-field>
-            <mat-autocomplete
-                #resultPicker="matAutocomplete"
-                [autoActiveFirstOption]="true"
-                [autoSelectActiveOption]="false">
-                @for (option of searchResults; track option) {
-                    <mat-option class="search-result" value="" (onSelectionChange)="activateSearchResult(option)">
-                        <ul class="facts">
-                            <li><span class="type">{{option.typeLabel}}</span></li>
-                            <li>{{ option.label }}</li>
-                            @if (option.summary) {
-                                <li><span class="summary">{{option.summary}}</span></li>
-                            }
-                        </ul>
-                    </mat-option>
-                }
-            </mat-autocomplete>
+
+            <button mat-icon-button [matMenuTriggerFor]="menu">
+                <mat-icon>more_vert</mat-icon>
+            </button>
+            <mat-menu #menu>
+                <a mat-menu-item routerLink="/reference/unreal/mass/stubs">Stubs</a>
+                <a mat-menu-item routerLink="/reference/unreal/mass/source">Source</a>
+            </mat-menu>
         </nav>
+        <mat-autocomplete
+            #resultPicker="matAutocomplete"
+            [autoActiveFirstOption]="true"
+            [autoSelectActiveOption]="false">
+            @for (option of searchResults; track option) {
+                <mat-option class="search-result" value="" (onSelectionChange)="activateSearchResult(option)">
+                    <ul class="facts">
+                        <li><span class="type">{{option.typeLabel}}</span></li>
+                        <li>{{ option.label }}</li>
+                        @if (option.summary) {
+                            <li><span class="summary">{{option.summary}}</span></li>
+                        }
+                    </ul>
+                </mat-option>
+            }
+        </mat-autocomplete>
         <router-outlet />
     `,
     styles: `
@@ -68,6 +76,8 @@ import { isPlatformServer } from "@angular/common";
 
             mat-form-field {
                 flex-grow: 1;
+                min-width: 1px;
+                width: 1px;
             }
         }
 
