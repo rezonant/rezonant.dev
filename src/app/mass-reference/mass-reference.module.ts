@@ -4,7 +4,7 @@ import { MassModuleComponent } from "./mass-module/mass-module.component";
 import { MassTraitComponent } from "./mass-trait/mass-trait.component";
 import { MassProcessorComponent } from "./mass-processor/mass-processor.component";
 import { MassFragmentComponent } from "./mass-fragment/mass-fragment.component";
-import { MassModulesComponent } from "./mass-modules/mass-modules.component";
+import { MassIndexComponent } from "./mass-index/mass-index.component";
 import { MassElementComponent } from "./mass-element/mass-element.component";
 import { MassReferenceService } from "./mass-reference.service";
 import { CommonModule } from "@angular/common";
@@ -21,7 +21,7 @@ import { MassReferenceShellComponent } from "./mass-reference-shell.component";
 @NgModule({
     declarations: [
         MassReferenceShellComponent,
-        MassModulesComponent,
+        MassIndexComponent,
         MassModuleComponent,
         MassTraitComponent,
         MassProcessorComponent,
@@ -51,7 +51,7 @@ export class MassReferenceModule {
                 path: '',
                 component: MassReferenceShellComponent,
                 children: [
-                    { path: '', component: MassModulesComponent },
+                    { path: '', component: MassIndexComponent },
                     { path: 'plugins/:pluginId', component: MassPluginComponent },
                     { path: ':moduleId', component: MassModuleComponent },
                     { path: ':moduleId/:id', component: MassElementComponent }

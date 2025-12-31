@@ -3,7 +3,7 @@ import { MassReferenceService } from "../mass-reference.service";
 import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
 
 @Component({
-    selector: 'rez-mass-modules',
+    selector: 'rez-mass-index',
     template: `
         <mat-tab-group [mat-stretch-tabs]="false">
             <mat-tab label="Elements">
@@ -93,7 +93,7 @@ import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
     `,
     standalone: false
 })
-export class MassModulesComponent {
+export class MassIndexComponent {
     private ref = inject(MassReferenceService);
 
     plugins = this.ref.getPlugins();
