@@ -1,5 +1,5 @@
 import { Component, input } from "@angular/core";
-import { E_ALL, E_ALL_NET_MODES, E_ALL_WORLD_MODES, E_DEFAULT } from "../mass-reference-data";
+import { E_ALL, E_ALL_NET_MODES, E_ALL_WORLD_MODES } from "../mass-reference-constants";
 import { MassProcessor, MassProcessorExecutionFlag } from "../mass-types";
 
 @Component({

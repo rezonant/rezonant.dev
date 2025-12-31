@@ -1,141 +1,12 @@
 import { unindent } from "../../common-ui";
-import { MassElement, MassElementRef, MassFragmentRef, MassModule, MassPlugin, MassProcessingRequirement, MassProcessorExecutionFlag, MassTag } from "./mass-types";
-
-export const M_MASS_COMMON = 'MassCommon';
-export const M_MASS_ENTITY = 'MassEntity';
-
-export const F_MASS_TAG: MassElementRef = { id: 'FMassTag', module: M_MASS_ENTITY };
-export const F_MASS_FRAGMENT: MassElementRef = { id: 'FMassFragment', module: M_MASS_ENTITY }
-export const F_MASS_SHARED_FRAGMENT: MassElementRef = { id: 'FMassSharedFragment', module: M_MASS_ENTITY }
-export const F_MASS_CONST_SHARED_FRAGMENT: MassElementRef = { id: 'FMassConstSharedFragment', module: M_MASS_ENTITY }
-export const U_MASS_TRANSLATOR: MassElementRef = { id: 'UMassTranslator', module: 'MassSpawner' }
-export const U_MASS_PROCESSOR: MassElementRef = { id: 'UMassProcessor', module: M_MASS_ENTITY }
-export const U_MASS_ENTITY_TRAIT_BASE: MassElementRef = { id: 'UMassEntityTraitBase', module: 'MassSpawner' }
-export const F_OBJECT_WRAPPER_FRAGMENT: MassElementRef = { id: 'FObjectWrapperFragment', module: 'MassCommon' }
-export const F_MASS_CHUNK_FRAGMENT: MassElementRef = { id: 'FMassChunkFragment', module: M_MASS_ENTITY }
-
-
-export const E_ALL_NET_MODES: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client'];
-export const E_ALL_WORLD_MODES: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client', 'EditorWorld'];
-export const E_ALL: MassProcessorExecutionFlag[] = ['Standalone', 'Server', 'Client', 'Editor', 'EditorWorld'];
-export const E_DEFAULT: MassProcessorExecutionFlag[] = ['Server', 'Standalone'];
-
-const EG_UpdateWorldFromMass = 'UE::Mass::ProcessorGroupNames::UpdateWorldFromMass';
-const EG_SyncWorldToMass = 'UE::Mass::ProcessorGroupNames::SyncWorldToMass';
-const EG_Behavior = 'UE::Mass::ProcessorGroupNames::Behavior';
-const EG_Tasks = 'UE::Mass::ProcessorGroupNames::Tasks';
-const EG_Avoidance = 'UE::Mass::ProcessorGroupNames::Avoidance';
-const EG_ApplyForces = 'UE::Mass::ProcessorGroupNames::ApplyForces';
-const EG_Movement = 'UE::Mass::ProcessorGroupNames::Movement';
-const EG_LODCollector = 'UE::Mass::ProcessorGroupNames::LODCollector';
-const EG_LOD = 'UE::Mass::ProcessorGroupNames::LOD';
-const EG_Representation = 'UE::Mass::ProcessorGroupNames::Representation';
-
-class RefBuilder implements MassElementRef {
-    constructor(public id: string, public module: string) {
-    }
-
-    remark?: string;
-
-    from(moduleId: string) {
-        this.module = moduleId;
-        return this;
-    }
-
-    withRemark(value: string) {
-        this.remark = value;
-        return this;
-    }
-
-    // Convert to ProcessingRequirementBuilder
-
-    noAccess() { return this.withAccess('None'); }
-    readOnly() { return this.withAccess('ReadOnly'); }
-    readWrite() { return this.withAccess('ReadWrite'); }
-
-    all() { return this.withPresence('All'); }
-    any() { return this.withPresence('Any'); }
-    none() { return this.withPresence('None'); }
-    optional() { return this.withPresence('Optional'); }
-
-    withAccess(value: 'None' | 'ReadOnly' | 'ReadWrite') {
-        return new ProcessingRequirementBuilder(this).withAccess(value);
-    }
-
-    withPresence(value: 'All' | 'Any' | 'None' | 'Optional') {
-        return new ProcessingRequirementBuilder(this).withPresence(value);
-    }
-}
-
-class ProcessingRequirementBuilder extends RefBuilder implements MassProcessingRequirement {
-    constructor(ref: MassElementRef) {
-        super(ref.id, ref.module);
-        this.access = 'None';
-        this.presence = 'All';
-        Object.assign(this, ref);
-    }
-
-    access?: 'None' | 'ReadOnly' | 'ReadWrite';
-    presence?: 'All' | 'Any' | 'None' | 'Optional';
-
-    override noAccess() { return this.withAccess('None'); }
-    override readOnly() { return this.withAccess('ReadOnly'); }
-    override readWrite() { return this.withAccess('ReadWrite'); }
-
-    override all() { return this.withPresence('All'); }
-    override any() { return this.withPresence('Any'); }
-    override none() { return this.withPresence('None'); }
-    override optional() { return this.withPresence('Optional'); }
-
-    override withAccess(value: 'None' | 'ReadOnly' | 'ReadWrite') {
-        this.access = value;
-        return this;
-    }
-
-    override withPresence(value: 'All' | 'Any' | 'None' | 'Optional') {
-        this.presence = value;
-        return this;
-    }
-}
-
-class ModuleBuilder {
-    constructor(private moduleId: string) {
-    }
-
-    r(id: string): RefBuilder {
-        return new RefBuilder(id, this.moduleId);
-    }
-
-    ref(id: string, extra?: Partial<MassElementRef>) {
-        return {
-            module: extra?.module || this.moduleId,
-            ...extra,
-            id
-        };
-    }
-
-    /**
-     * @deprecated use ref() instead
-     */
-    frag(id: string, extra?: Partial<MassFragmentRef>) {
-        return {
-            id,
-            module: this.moduleId,
-            ...(extra || {}),
-        };
-    }
-}
-
-function declareModule(moduleId: string, declarator: (module: ModuleBuilder) => Omit<MassModule, 'id'>) {
-    return {
-        ...declarator(new ModuleBuilder(moduleId)),
-        id: moduleId
-    };
-}
-
-function declareTag(id: string, extra?: Partial<MassTag>): MassTag {
-    return { id, parent: F_MASS_TAG, type: 'tag', ...(extra ?? {}) };
-}
+import {
+    E_ALL, E_ALL_NET_MODES, EG_ApplyForces, EG_Avoidance, EG_Behavior, EG_LOD, EG_LODCollector, EG_Movement,
+    EG_Representation, EG_SyncWorldToMass, EG_Tasks, EG_UpdateWorldFromMass, F_MASS_CHUNK_FRAGMENT,
+    F_MASS_CONST_SHARED_FRAGMENT, F_MASS_SHARED_FRAGMENT, F_OBJECT_WRAPPER_FRAGMENT, M_MASS_COMMON,
+    M_MASS_ENTITY, U_MASS_PROCESSOR, U_MASS_TRANSLATOR
+} from "./mass-reference-constants";
+import { declareModule, declareTag } from "./mass-reference-data-utils";
+import { MassPlugin } from "./mass-types";
 
 export const MASS_REFERENCE: MassPlugin[] = [
     {
@@ -1090,9 +961,9 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                 type: 'TMassLODCalculator<FMassSimulationLODLogic>',
                             },
                             {
-                               name: 'bHasAdjustedDistancesFromCount',
-                               type: 'bool',
-                               defaultValue: 'false',
+                                name: 'bHasAdjustedDistancesFromCount',
+                                type: 'bool',
+                                defaultValue: 'false',
                             }
                         ]
                     },

@@ -1,7 +1,8 @@
 import { ElementRef, Injectable } from "@angular/core";
 import { MassElement, MassElementRef, MassFragment, MassModule, MassPlugin, MassProcessor, MassQuery, MassTag, MassTrait } from "./mass-types";
-import { E_DEFAULT, F_MASS_FRAGMENT, F_MASS_TAG, MASS_REFERENCE, U_MASS_ENTITY_TRAIT_BASE, U_MASS_PROCESSOR } from "./mass-reference-data";
+import { E_DEFAULT, F_MASS_FRAGMENT, F_MASS_TAG, U_MASS_ENTITY_TRAIT_BASE, U_MASS_PROCESSOR } from "./mass-reference-constants";
 import stringDistance from 'js-levenshtein';
+import { MASS_REFERENCE } from "./mass-reference-data";
 
 export interface SearchResult {
     label: string;
