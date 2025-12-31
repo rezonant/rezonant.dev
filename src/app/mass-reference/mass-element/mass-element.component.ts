@@ -101,6 +101,7 @@ import { MassProcessor } from "../mass-types";
                 </mat-tab>
                 @if (subclasses().length > 0) {
                     <mat-tab label="Subclasses">
+                        <br/>
                         @for (subclass of subclasses(); track subclass.id) {
                             <div>
                                 <a routerLink="/reference/unreal/mass/{{ subclass.module }}/{{ subclass.id }}">
