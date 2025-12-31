@@ -41,10 +41,11 @@ import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
                 </div>
             </mat-tab>
             <mat-tab label="Stubs">
-                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Traits" [elements]="stubTraits" />
-                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Fragments" [elements]="stubFragments" />
-                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Processors" [elements]="stubProcessors" />
-                    <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Tags" [elements]="stubTags" />
+                <br/>
+                <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Traits" [elements]="stubTraits" />
+                <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Fragments" [elements]="stubFragments" />
+                <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Processors" [elements]="stubProcessors" />
+                <rez-mass-element-list [showSummary]="true" [showRemarks]="false" name="Tags" [elements]="stubTags" />
             </mat-tab>
             <mat-tab label="JSON">
                 <pre>{{modules | json}}</pre>
