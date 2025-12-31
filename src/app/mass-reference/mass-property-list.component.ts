@@ -31,7 +31,7 @@ import { MassProperty } from "./mass-types";
                     @if (prop.category) {
                         <div class="property">
                             <label>Category</label>
-                            {{ prop.category }}
+                            {{ formatCategory(prop.category) }}
                         </div>
                     }
                     <div class="property">
@@ -122,6 +122,9 @@ export class MassPropertyListComponent {
     name = input<string>('Properties');
     showName = input<boolean>(true);
 
+    formatCategory(cat: string) {
+        return cat.replace(/\|/g, ' » ')
+    }
     keys(o: any) {
         return Object.keys(o);
     }

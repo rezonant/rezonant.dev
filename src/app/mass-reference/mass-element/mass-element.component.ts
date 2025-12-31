@@ -14,10 +14,6 @@ import { MassProcessor } from "../mass-types";
             </rez-not-found>
         } @else {
             <h1>
-                <!-- <a routerLink="/reference/unreal/mass">
-                    Mass Reference
-                </a>
-                &raquo; -->
                 <a routerLink="/reference/unreal/mass/{{ module().id }}">
                     {{ module().id }}
                 </a>

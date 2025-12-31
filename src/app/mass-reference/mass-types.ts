@@ -61,6 +61,7 @@ export interface MassProcessingRequirement extends MassElementRef {
 
 export interface MassQuery {
     id: string;
+    type?: 'query';
     owner?: MassElementRef;
     comment?: string;
     remark?: string;
@@ -101,7 +102,11 @@ export interface MassTag extends MassElementBase {
 
 export interface MassModule {
     id: string;
+    type?: 'module';
     name?: string;
+    summary?: string;
+    remark?: string;
+    comment?: string;
     plugin?: string;
     traits?: (Omit<MassTrait, 'type'>)[];
     fragments?: (Omit<MassFragment, 'type'>)[];
@@ -113,6 +118,10 @@ export type MassElement = MassProcessor | MassFragment | MassTrait | MassTag;
 
 export interface MassPlugin {
     id: string;
+    type?: 'plugin';
+    summary?: string;
+    remark?: string;
+    comment?: string;
     name?: string;
     modules?: MassModule[];
 }

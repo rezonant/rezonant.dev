@@ -1,24 +1,93 @@
 import { ElementRef, Injectable } from "@angular/core";
-import { MassElement, MassElementRef, MassFragment, MassModule, MassPlugin, MassProcessor, MassTag, MassTrait } from "./mass-types";
+import { MassElement, MassElementRef, MassFragment, MassModule, MassPlugin, MassProcessor, MassQuery, MassTag, MassTrait } from "./mass-types";
 import { E_DEFAULT, F_MASS_FRAGMENT, F_MASS_TAG, MASS_REFERENCE, U_MASS_ENTITY_TRAIT_BASE, U_MASS_PROCESSOR } from "./mass-reference-data";
+import stringDistance from 'js-levenshtein';
+
+export interface SearchResult {
+    label: string;
+    value: string;
+}
+
+export interface IndexEntry {
+    text: string;
+    lowercase: string;
+    typeLabel: string;
+    label: string;
+    summary?: string;
+    object: { type?: string };
+}
 
 @Injectable()
 export class MassReferenceService {
     constructor() {
         this.plugins = structuredClone(MASS_REFERENCE);
         this.modules = this.plugins.map(x => x.modules || []).flat();
+        this.elements = this.modules.map(x => this.getElements(x.id)).flat();
         this.preprocess();
+
+        // Cached bins
+        this.traits = this.elements.filter(x => x.type === 'trait') as MassTrait[];
+        this.fragments = this.elements.filter(x => x.type === 'fragment') as MassFragment[];
+        this.tags = this.elements.filter(x => x.type === 'tag') as MassTag[];
+        this.processors = this.elements.filter(x => x.type === 'processor') as MassProcessor[];
+        this.queries = this.processors.map(x => x.queries || []).flat();
     }
 
     private plugins: MassPlugin[];
     private modules: MassModule[];
+    private elements: MassElement[];
+    private processors: MassProcessor[];
+    private traits: MassTrait[];
+    private fragments: MassFragment[];
+    private tags: MassTag[];
+    private queries: MassQuery[];
+    private index: IndexEntry[] = [];
+    private symbolMap = new Map<string, IndexEntry>;
+
+    getAllElements() { return this.elements; }
+    getAllProcessors() { return this.processors; }
+    getAllTraits() { return this.traits; }
+    getAllFragments() { return this.fragments; }
+    getAllQueries() { return this.queries; };
+
+    private rankResult(query: string, symbol: string) {
+        let rank = this.rankResultCore(query, symbol);
+        return rank;
+    }
+
+    private rankResultCore(query: string, symbol: string) {
+        if (symbol === query)
+            return -10_000_000;
+
+        if (symbol.startsWith(query))
+            return -9_000_000 * 1 / ((symbol.length - query.length) || 1);
+
+        let rank = stringDistance(query, symbol);
+
+        if (symbol.includes(query))
+            rank *= 0.5;
+
+        return rank;
+    }
+
+    search(query: string): IndexEntry[] {
+        if (!query)
+            return this.index;
+
+        let lowercaseQuery = query.toLowerCase().replace(/ +/g, '');
+        let exactMatch = this.symbolMap.get(lowercaseQuery);
+        if (exactMatch)
+            return [exactMatch];
+
+        this.index.sort((a, b) => {
+            return this.rankResult(lowercaseQuery, a.lowercase) - this.rankResult(lowercaseQuery, b.lowercase);
+        });
+
+        return this.index;
+    }
 
     getSubclasses(type: MassElementRef) {
         return this.getAllElements().filter(x => x.parent?.module === type.module && x.parent?.id === type.id);
-    }
-
-    getAllElements() {
-        return this.modules.map(x => this.getElements(x.id)).flat();
     }
 
     getTraitsThatProvideFragment(fragment: MassFragment) {
@@ -29,28 +98,12 @@ export class MassReferenceService {
         return this.getAllTraits().filter(x => this.doesTraitAddTag(x, tag));
     }
 
-    getAllProcessors() {
-        return this.getAllElements().filter(x => x.type === 'processor') as MassProcessor[];
-    }
-
-    getAllTraits() {
-        return this.getAllElements().filter(x => x.type === 'trait') as MassTrait[];
-    }
-
-    getAllFragments() {
-        return this.getAllElements().filter(x => x.type === 'fragment') as MassFragment[];
-    }
-
-    getAllQueries() {
-        return this.getAllProcessors().map(x => x.queries || []).flat();
-    }
-
     getQueriesThatReferenceFragment(fragment: MassFragment) {
         return this.getAllQueries()
             .filter(x => (x.requiresFragments ?? [])
                 .some(x => this.isSameElement(fragment, x))
             )
-        ;
+            ;
     }
 
     getQueriesThatReferenceTag(tag: MassTag) {
@@ -58,7 +111,7 @@ export class MassReferenceService {
             .filter(x => (x.requiresTags ?? [])
                 .some(x => this.isSameElement(tag, x))
             )
-        ;
+            ;
     }
 
     doesTraitAddFragment(trait: MassTrait, fragment: MassFragment) {
@@ -129,6 +182,9 @@ export class MassReferenceService {
 
     preprocess() {
         // Ensure `type` is set
+        this.plugins.forEach(p => p.type = 'plugin');
+        this.modules.forEach(m => m.type = 'module');
+
         for (let module of this.modules) {
             module.traits?.forEach(t => (t as any).type = 'trait');
             module.processors?.forEach(t => (t as any).type = 'processor');
@@ -138,10 +194,10 @@ export class MassReferenceService {
 
         // Ensure `module` is set
         for (let module of this.modules) {
-            module.traits?.forEach(t => (t as any).module = module.id);
-            module.processors?.forEach(t => (t as any).module = module.id);
-            module.fragments?.forEach(t => (t as any).module = module.id);
-            module.tags?.forEach(t => (t as any).module = module.id);
+            module.traits?.forEach(t => t.module = module.id);
+            module.processors?.forEach(t => t.module = module.id);
+            module.fragments?.forEach(t => t.module = module.id);
+            module.tags?.forEach(t => t.module = module.id);
         }
 
         // Ensure `plugin` is set
@@ -205,5 +261,47 @@ export class MassReferenceService {
                 }
             }
         }
+
+        // Build search index
+        this.plugins.forEach(p => this.addToIndex({
+            typeLabel: 'Plugin',
+            label: p.id,
+            text: p.id,
+            object: p,
+            summary: p.summary || p.comment
+        }));
+        this.modules.forEach(m => this.addToIndex({
+            typeLabel: 'Module',
+            label: m.id,
+            text: m.id,
+            object: m,
+            summary: m.summary || m.comment
+        }));
+        this.elements.forEach(e => this.addToIndex({
+            typeLabel: `${this.elementTypeToLabel[e.type] || e.type}`,
+            label: e.id,
+            text: e.id,
+            object: e,
+            summary: e.summary || e.comment
+        }));
+    }
+
+    private elementTypeToLabel = {
+        fragment: 'Fragment',
+        trait: 'Trait',
+        processor: 'Processor',
+        tag: 'Tag',
+        query: 'Query'
+    };
+
+    private addToIndex(symbolInit: Omit<IndexEntry, 'lowercase'>) {
+
+        if (symbolInit.label.includes('undefined'))
+            debugger;
+
+        let symbol: IndexEntry = { ...symbolInit, lowercase: symbolInit.text.toLowerCase() };
+
+        this.index.push(symbol);
+        this.symbolMap.set(symbol.lowercase, symbol);
     }
 }

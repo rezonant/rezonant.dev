@@ -5,8 +5,6 @@ import { MassFragment, MassProcessor, MassTag, MassTrait } from "../mass-types";
 @Component({
     selector: 'rez-mass-modules',
     template: `
-        <h1>Mass Reference</h1>
-
         <mat-tab-group [mat-stretch-tabs]="false">
             <mat-tab label="Elements">
                 <div class="lists">

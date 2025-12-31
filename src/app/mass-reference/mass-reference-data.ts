@@ -1247,13 +1247,13 @@ export const MASS_REFERENCE: MassPlugin[] = [
                                     `
                                 ),
                                 requiresTags: [
-                                    m.r('FMassCollectDistanceLODViewerInfoTag'),
+                                    m.r('FMassCollectDistanceLODViewerInfoTag').all(),
                                 ],
                                 requiresFragments: [
-                                    m.r('FTransformFragment').from(M_MASS_COMMON),
-                                    m.r('FMassViewerInfoFragment'),
-                                    m.r('FMassSimulationVariableTickChunkFragment'),
-                                    m.r('FMassVisualizationChunkFragment'),
+                                    m.r('FTransformFragment').from(M_MASS_COMMON).readOnly(),
+                                    m.r('FMassViewerInfoFragment').readWrite(),
+                                    m.r('FMassSimulationVariableTickChunkFragment').readOnly().optional(),
+                                    m.r('FMassVisualizationChunkFragment').readOnly().optional(),
                                 ]
                             },
                             {

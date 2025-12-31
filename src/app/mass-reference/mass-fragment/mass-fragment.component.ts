@@ -7,7 +7,7 @@ import { MassReferenceService } from "../mass-reference.service";
     template: `
         <br/>
         <rez-mass-property-list [properties]="fragment().properties || []" />
-        <rez-mass-element-list name="Added by" [elements]="providerTraits()" />
+        <rez-mass-element-list name="Added by" [showRemarks]="false" [showSummary]="true" [elements]="providerTraits()" />
         <rez-mass-element-list name="Queries" [elements]="queryRefs()" />
     `,
     styles: `

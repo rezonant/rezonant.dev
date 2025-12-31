@@ -6,7 +6,7 @@ import { MassReferenceService } from "../mass-reference.service";
     selector: 'rez-mass-tag',
     template: `
         <br/>
-        <rez-mass-element-list name="Added by" [elements]="providerTraits()" />
+        <rez-mass-element-list name="Added by" [showRemarks]="false" [showSummary]="true" [elements]="providerTraits()" />
         <rez-mass-element-list name="Queries" [elements]="queryRefs()" />
     `,
     standalone: false

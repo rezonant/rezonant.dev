@@ -8,8 +8,17 @@ import { MassReferenceService } from "../mass-reference.service";
             <rez-not-found />
         } @else {
             <h1>
-                <a routerLink="/reference/unreal/mass">Mass Reference</a>
+                <a routerLink="/reference/unreal/mass/plugins/{{ plugin().id }}">
+                    @if (plugin().id === 'Mass') {
+                        <mat-icon>foundation</mat-icon>
+                    } @else {
+                        <mat-icon>extension</mat-icon>
+                    }
+                    {{ plugin()!.id }}
+                </a>
                 &raquo;
+
+                <mat-icon>group_work</mat-icon>
                 {{ module().name || module().id }}
             </h1>
 
@@ -30,4 +39,5 @@ export class MassModuleComponent {
     moduleId = input.required<string>();
     notFound = computed(() => !this.ref.getModule(this.moduleId()));
     module = computed(() => this.ref.getModule(this.moduleId())!);
+    plugin = computed(() => this.ref.getPlugin(this.module().plugin!)!);
 }

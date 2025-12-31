@@ -11,8 +11,11 @@ import { MassReferenceService } from "../mass-reference.service";
                 />
         } @else {
             <h1>
-                <a routerLink="/reference/unreal/mass">Mass Reference</a>
-                &raquo;
+                @if (plugin().id !== 'Mass') {
+                    <mat-icon>extension</mat-icon>
+                } @else {
+                    <mat-icon>foundation</mat-icon>
+                }
                 {{ plugin().name || plugin().id }}
             </h1>
 

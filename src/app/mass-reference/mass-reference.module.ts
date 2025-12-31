@@ -16,9 +16,11 @@ import { MaterialModule } from "../material.module";
 import { MassTagComponent } from "./mass-tag/mass-tag.component";
 import { MassPropertyListComponent } from "./mass-property-list.component";
 import { A11yModule } from "@angular/cdk/a11y";
+import { MassReferenceShellComponent } from "./mass-reference-shell.component";
 
 @NgModule({
     declarations: [
+        MassReferenceShellComponent,
         MassModulesComponent,
         MassModuleComponent,
         MassTraitComponent,
@@ -45,10 +47,16 @@ import { A11yModule } from "@angular/cdk/a11y";
 export class MassReferenceModule {
     static routes(): Routes {
         return [
-            { path: '', component: MassModulesComponent },
-            { path: 'plugins/:pluginId', component: MassPluginComponent },
-            { path: ':moduleId', component: MassModuleComponent },
-            { path: ':moduleId/:id', component: MassElementComponent }
+            {
+                path: '',
+                component: MassReferenceShellComponent,
+                children: [
+                    { path: '', component: MassModulesComponent },
+                    { path: 'plugins/:pluginId', component: MassPluginComponent },
+                    { path: ':moduleId', component: MassModuleComponent },
+                    { path: ':moduleId/:id', component: MassElementComponent }
+                ]
+            }
         ];
     }
 }
