@@ -14,9 +14,22 @@ import { MassReferenceService } from "../mass-reference.service";
         } @else {
             <h1>
                 <a routerLink="/reference/unreal/mass/{{ module().id }}">
+                    <mat-icon>group_work</mat-icon>
                     {{ module().id }}
                 </a>
                 &raquo;
+
+                @switch (element().type) {
+                    @case ('trait') {
+                        <mat-icon>tag</mat-icon>
+                    } @case ('processor') {
+                        <mat-icon>memory</mat-icon>
+                    } @case ('tag') {
+                        <mat-icon>sell</mat-icon>
+                    } @case ('fragment') {
+                        <mat-icon>data_object</mat-icon>
+                    }
+                }
                 {{ id() }}
             </h1>
 

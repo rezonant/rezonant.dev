@@ -105,13 +105,6 @@ import { MassProcessor, MassProcessorExecutionFlag } from "../mass-types";
         .query-contents {
             margin-left: 2.5em;
         }
-
-        h1 mat-icon {
-            $size: 32px;
-            width: $size;
-            height: $size;
-            font-size: $size;
-        }
     `,
     standalone: false
 })

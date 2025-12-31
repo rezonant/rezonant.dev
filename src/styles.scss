@@ -155,7 +155,7 @@ div.property {
     }
 }
 
-mat-icon {
+mat-icon, .mat-icon {
     vertical-align: middle;
 }
 
@@ -203,4 +203,11 @@ hr {
 
 .spacer {
     flex-grow: 1;
+}
+
+h1 .mat-icon {
+    $size: 1em;
+    width: $size;
+    height: $size;
+    font-size: $size;
 }
