@@ -33,9 +33,10 @@
 - [tranek's GAS Documentation](https://github.com/tranek/GASDocumentation)
 - [Donald Wu's Unreal Source Explained](https://github.com/donaldwuid/unreal_source_explained/tree/master)
 - [Unreal Community Wiki](https://unrealcommunity.wiki/)
+- [WizardCell's Persistent Data Compendium](https://wizardcell.com/unreal/persistent-data/)
 
 # Tools
-- [Blueprint UE](http://blueprintue.com/) - Share Blueprints online
+- [Blueprint UE](https://blueprintue.com/) - Share Blueprints online
 
 # Language Support / Scripting
 - [Unreal Sharp](https://www.unrealsharp.com/) - Support for C# scripting
