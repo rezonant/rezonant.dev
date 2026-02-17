@@ -1,1 +1,24 @@
-coming soon
+<h1>Projects</h1>
+
+<p>Unless otherwise specified, I built the projects below myself.</p>
+
+@for (project of projects; track project.id) {
+    <div class="project">
+        <div class="logo">
+            <a target="_blank" [href]="project.url">
+                <img [src]="project.logo" />
+            </a>
+        </div>
+        <div class="details">
+            <a class="name" target="_blank" [href]="project.url">
+                {{ project.name }}
+            </a>
+            <div class="summary">
+                {{ project.summary }}
+            </div>
+            <div class="description">
+                {{ project.description }}
+            </div>
+        </div>
+    </div>
+}
