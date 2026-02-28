@@ -64,6 +64,7 @@
 - [World Building Guide](https://dev.epicgames.com/community/learning/knowledge-base/r6wl/unreal-engine-world-building-guide) - An extensive guide into Unreal's open world technologies (World Partition, HLODs, etc) straight from Epic
 - [Unreal Engine Knowledgebase](https://dev.epicgames.com/community/unreal-engine/learning?source=epic_games&types=knowledge_base,knowledge_base) - The Learning area of Epic Developer Center has tons of Knowledge Base articles much like those listed above
 - [Large World Coordinates](https://dev.epicgames.com/documentation/en-us/unreal-engine/large-world-coordinates-in-unreal-engine-5?application_version=5.0)
+- [Lumen Technical Details](https://dev.epicgames.com/documentation/en-us/unreal-engine/lumen-technical-details-in-unreal-engine)
 
 # Releasing?
 
