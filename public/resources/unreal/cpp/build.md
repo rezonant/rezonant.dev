@@ -166,8 +166,10 @@ Unreal Release Notes for the specific engine version you are using (search MSVC 
 `Engine\Config\Windows\Windows_SDK.json` file within your engine (this file is visible within your IDE as well). 
 
 > [!NOTE]
-> In Unreal Engine 5.3 and earlier `Windows_SDK.json` does not exist. The preferred build tools versions are 
-> found in `/Engine/Source/Programs/UnrealBuildTool/Platform/Windows/MicrosoftPlatformSDK.Versions.cs` instead.
+> In Unreal Engine 5.3 and earlier `Windows_SDK.json` does not exist. In earlier versions:
+> - From 5.1 to 5.3 see `/Engine/Source/Programs/UnrealBuildTool/Platform/Windows/MicrosoftPlatformSDK.Versions.cs`
+> - From 4.18 to 5.0 see `/Engine/Source/Programs/UnrealBuildTool/Platform/Windows/UEBuildWindows.cs`
+> - From 4.0 to 4.17 see `/Engine/Source/Programs/UnrealBuildTool/Windows/UEBuildWindows.cs`
 
 The newest versions of MSVC are incompatible with the Unreal Engine codebase. If you receive errors related to 
 `std::__feature` or the like, you likely have the wrong build tools version installed. If you look near the start of the 
