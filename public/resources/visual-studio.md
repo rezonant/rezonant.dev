@@ -12,7 +12,7 @@ Find resources for Microsoft Visual Studio below
 ## Professional/Enterprise
 
 If you have an MSDN license or otherwise have a paid license for Visual Studio, you can download older versions of 
-the Professional/Enterprise editions in the All Downloads section of VisualStudio.com
+the Professional/Enterprise editions in the All Downloads section of VisualStudio.com.
 
 - https://my.visualstudio.com/Downloads?q=Visual%20Studio
 
