@@ -49,6 +49,7 @@ const pathMatcher: UrlMatcher = (segments: UrlSegment[], group: UrlSegmentGroup,
         MassReferenceModule,
         RouterModule.forRoot([
             { path: '', pathMatch: 'full', component: HomeComponent },
+            { path: 'vs', pathMatch: 'full', redirectTo: '/resources/visual-studio' },
             { path: 'projects', pathMatch: 'full', component: ProjectsComponent },
             { path: 'about', pathMatch: 'full', component: AboutComponent },
             { path: 'blog', pathMatch: 'full', component: BlogComponent },
