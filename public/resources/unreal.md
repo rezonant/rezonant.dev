@@ -13,6 +13,10 @@
 - [Asset Registry](./unreal/asset-registry.md)
 - [Streamable Manager](./unreal/streamable-manager.md)
 
+# Presentations
+- [Myth-Busting "Best Practics" in Unreal Engine](./unreal/aris-myths.md) [Ari Arnbjörnsson, Epic Games]  
+  I have a handy table of contents to jump to specific myths within this video, ready for easy sharing
+
 # Communities
 
 - [Unreal Source](./unrealsource.md) - The Unreal Source discord is the place to be for all things Unreal
