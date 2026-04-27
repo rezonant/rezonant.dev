@@ -1,6 +1,6 @@
-# Myths
+# Myth-Busting "Best Practics" in Unreal Engine by Ari Arnbjörnsson
 
-This page focuses on myths believed by newbie Unreal developers and users.
+This page provides handy links to the various myths discussed in Ari Arnbjörnsson's talk from Unreal Fest 2024 discussing common misconceptions made by new Unreal developers. You can find the full talk here: https://www.youtube.com/watch?v=S2olUc9zcB8
 
 # Don't use Tick (False)
 
