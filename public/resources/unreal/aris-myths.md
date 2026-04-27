@@ -4,7 +4,7 @@ This page focuses on myths believed by newbie Unreal developers and users.
 
 # Don't use Tick (False)
 
-> Epic addresses the myth: https://youtu.be/S2olUc9zcB8?si=u3Menxw_VmbMSGqG&t=122
+> https://youtu.be/S2olUc9zcB8?si=u3Menxw_VmbMSGqG&t=122
 
 # You can't make 2D games in Unreal (False)
 
@@ -16,7 +16,7 @@ This page focuses on myths believed by newbie Unreal developers and users.
 
 # Don't use Cast (False)
 
-> Epic addresses the myth: https://youtu.be/S2olUc9zcB8?si=fnDkLEXBVTmqaU0Y&t=1550
+> https://youtu.be/S2olUc9zcB8?si=fnDkLEXBVTmqaU0Y&t=1550
 
 # If it can be Nanite, it should be Nanite
 
