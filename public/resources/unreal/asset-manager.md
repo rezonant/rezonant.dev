@@ -142,7 +142,8 @@ leave it loaded even when unreferenced), calls that do not perform loading like 
 `TSoftObjectPtr` or Blueprint soft object reference without first ensuring its loaded may immediately return the object
 when in PIE, but will not work when you play your game in Standalone (`-game`) or when playing a cooked/packaged game.
 
-To ensure you are properly handling loading and not unintentionally relying on assets already loaded in the editor, you should try your experience in Standalone mode where assets (primary or not) will not be loaded ahead of play.
+To ensure you are properly handling loading and not unintentionally relying on assets already loaded in the editor, 
+you should try your experience in Standalone mode where assets (primary or not) will not be loaded ahead of play.
 
 # Custom Asset Managers
 
