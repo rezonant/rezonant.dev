@@ -17,7 +17,7 @@ During this deep dive, I found some bugs. These should be reported to Epic and f
 remains to be seen.
 
 - `UPathFollowingComponent` owned by `AController` does not clean up `APawn::OnActorHit` subscription when repossession
-  occurs. This implies that possessing pawn A, then later possessing pawn B, then seting pawn B to move to pawn C, if pawn A touches pawn C, the path following component (now associated with pawn B) will incorrectly consider its path finished.
+  occurs. This implies that possessing pawn A, then later possessing pawn B, then setting pawn B to move to pawn C, if pawn A touches pawn C, the path following component (now associated with pawn B) will incorrectly consider its path finished.
 
 # Multiple Supported Agent Dimensions (and thus Multiple Nav Meshes)
 
@@ -58,16 +58,54 @@ Despite this class being the absolute minimal base class for a navigation system
 extend `UNavigationSystemV1`, because most of the systems built above the navigation system such as AI (`AIModule`) 
 assume that the navigation system will be at least as specialized as `UNavigationSystemV1`.
 
+The Navigation System is a singleton object owned by the world (and with the same lifetime). Each world receives an 
+instance of the chosen Navigation System. If it were rewritten with modern Unreal APIs in mind it would most certainly 
+be implemented as a `UWorldSubsystem` instead, but this class pre-dates subsystems.
+
 ## `UNavigationSystemV1`
 
-The Navigation System is a singleton object owned by the world (and with the same lifetime). If it were rewritten with 
-modern Unreal APIs in mind it would most certainly be implemented as a `UWorldSubsystem` instead, but this class 
-pre-dates subsystems.
+The built-in implementation of the `UNavigationSystemBase` type. Most parts of the engine depend on the navigation 
+system being this type or a subclass.
 
-The Navigation System's responsibilities are:
+The primary responsibilities of `UNavigationSystemV1` are:
 - To create, manage, and register `ANavigationData` actors according to the project's supported agents
 - Resolve an appropriate ANavigationData actor instance given the provided agent properties, including its size and 
   location information (`GetNavDataForProps`)
+
+It also determines which `ANavigationData` actor should be considered the "main" one, which is used when a query does 
+not otherwise specify navigation data to be used. It determines the main navigation by consulting the 
+`DefaultAgentName` option within project settings (this should match the `Name` of one of the `Supported Agents` array 
+entries), or if none is specified, it uses the first navigation data that was registered.
+
+`UNavigationSystemV1` also creates an `AAbstractNavData` actor separate from its normal `ANavigationData` actors which 
+is used for "direct" (as the crow flies) movement when "Use Pathfinding" is set to false on a movement request.
+
+It is responsible for creating the world's Crowd Manager (`UCrowdManager`). This object is used by 
+`UCrowdFollowingComponent` to dynamically modify navigation paths for navigation avoidance.
+
+## `INavRelevantInterface`
+
+An interface that can be implemented on `AActor` or `UActorComponent` subclasses that registers that element with the 
+`UNavigationObjectRepository` subsystem so it can be used when generating navigation data. This happens when the 
+Gameplay Framework informs the navigation system of newly registered components and actors via the 
+`OnComponentRegistered` and `OnActorRegistered` delegates of the `FNavigationSystem` namespace, respectively.
+
+The interface provides facilities for informing the navigation system of its navigation relevancy settings, bounds, 
+geometry (collision/voxel data), nav modifiers, nav links, load status, and more. It also allows for an object to support "geometry slices", where the object can export subsections of its geometry data
+to better support streaming generation of navigation data.
+
+## `UNavigationObjectRepository`
+
+> _World subsystem dedicated to store different types of navigation related elements that the NavigationSystem needs 
+> to access._
+
+This is a newer class- it was first added in 5.5, apparently meant to support 5.6's Automatic Nav Link Generation as 
+well as allowing navigation with the new FastGeo geometry streaming solution for open worlds. The repository allows 
+Actors and Components to be registered as was possible in previous versions, but now also allows non-UObject elements 
+to be registered. If you want to inject nav links, custom geometry, or whatever else into the navmesh generator, this 
+subsystem is for you.
+
+The elements within the registry are made available for use by navmesh generation implementations.
 
 ## `ANavigationData`
 
@@ -193,11 +231,36 @@ A specialized subclass of `UPathFollowingComponent` which incorporates crowd man
 ## "Moved Too Far" Check
 
 Because the main purpose of `UCrowdFollowingComponent` is to deviate normal nav paths to route agents around each other
-in the "crowd", this comes with several edge cases that must be handled. Normally `UPathFollowingComponent` detects
-successful completion of path movement in one of two ways: via a "bump" into the goal (when the goal is an actor) or 
-by checking if the agent's capsule overlaps with the goal (for more detail, see `UPathFollowingComponent` section).
+in the "crowd", this comes with several edge cases that must be handled. 
 
+Normally `UPathFollowingComponent` detects successful completion of path movement in one of two ways: via a "bump" into 
+the goal (when the goal is an actor) or by checking if the agent's capsule overlaps with the goal (for more detail, see 
+`UPathFollowingComponent` section). 
 
+Imagine that pawn A wants to reach a point that is occupied by pawn B, and both are registered as crowd agents. As pawn
+A approaches the goal point, they will be routed around pawn B. After they've gone past pawn B, they will be too far,
+and to reach the goal would need to path backward toward the path point, which just causes the same thing to happen, 
+where pawn A routes around pawn B and this would happen forever. To deal with this, `UCrowdFollowingComponent` has a 
+(frankly rather rudimentary) check when following the last segment of the path to see if the goal point is "behind" the 
+character based on their current direction. In theory this should work great, because a path segment is always a 
+straight line, but unfortunately it is possible for the crowd manager to reverse direction of the character entirely to
+route around another character.
+
+Thus there is an easily replicable bug when using `UCrowdFollowingComponent`: Place two pawns facing each other and have
+them navigate to a point on their shared line beyond one another. This is a simple one segment path for each, and thus
+the "Moved Too Far" check is active. When the two pawns bump into each other, both will do a 180 to reroute around the 
+other agent, which will cause the check to prematurely declare the path as finished. In the case of a single navigation 
+request, they will just stop without completing the movement. In the case of a continuously executing request (like 
+what might be done in a behavior tree waiting for the character to be within range of a target point), the characters 
+will restart the navigation by turning around toward their respective goals, hitting each other again, turning back 
+around to reroute themselves, causing the navigation to finish. As a result the characters thrash around and continue 
+smashing into each other until collision takes care of letting them past their obstacle (which is the absolute opposite 
+of what you want from an avoidance system). As a result, many people think Detour Crowds in Unreal is broken, and 
+technically they are not wrong.
+
+You can work around this bug by disabling the check with a custom `UCrowdFollowingComponent` subclass (just set 
+`bCanCheckMovingTooFar = false;` before calling `Super` in an override of `UpdatePathSegment`), but that will have the 
+effect of causing the "orbit" behavior when trying to path to a point occupied by another agent.
 
 ### Initialization
 
