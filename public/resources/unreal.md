@@ -28,7 +28,7 @@
 - [Laura's (Mostly) Unreal Blog](https://landelare.github.io/)
 - [zomg's Notes](https://zomgmoz.tv/unreal/)
 - [itsBaffled's Blog](https://itsbaffled.github.io/)
-- [Northstar Dev Blog](https://dev.northstarhana.com/)
+- [Northstar Dev Blog](https://nstar.dev/)
 - [Daft Software Blog](https://blog.daftsoftware.com/)
 - [WizardCell's Unreal Blog](https://wizardcell.com/unreal/)
 
