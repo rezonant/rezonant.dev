@@ -72,6 +72,5 @@
 
 # Releasing?
 
-You need to notify Epic when you release an Unreal game to be compliant with the EULA. Look for the "Notification of release" section [on this page](https://www.unrealengine.com/en-US/release) in case it has changed, but at the time of this writing you are heading here:
-
-https://dev.epicgames.com/portal/en-US/?next=notification-of-release
+You need to notify Epic when you release an Unreal game to be compliant with the EULA. To do 
+this, you should create an organization on the Epic Games Dev Portal at https://dev.epicgames.com/portal and click Unreal Engine -> Royalties and use the Release Form option to submit your information.
